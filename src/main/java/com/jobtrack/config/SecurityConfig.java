@@ -1,9 +1,12 @@
 package com.jobtrack.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jobtrack.repository.UserRepository;
 import com.jobtrack.security.JwtAuthenticationFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -21,12 +24,16 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Configuration
 @EnableWebSecurity
@@ -63,6 +70,7 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    // Security filter chain
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthFilter) throws Exception {
         http
@@ -72,14 +80,43 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/v1/auth/**",
-                                "/h2-console/**",
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/error"
+                                AntPathRequestMatcher.antMatcher("/"),
+                                AntPathRequestMatcher.antMatcher("/index.html"),
+                                AntPathRequestMatcher.antMatcher("/static/**"),
+                                AntPathRequestMatcher.antMatcher("/favicon.ico"),
+                                AntPathRequestMatcher.antMatcher("/api/v1/auth/**"),
+                                AntPathRequestMatcher.antMatcher("/h2-console"),
+                                AntPathRequestMatcher.antMatcher("/h2-console/**"),
+                                AntPathRequestMatcher.antMatcher("/v3/api-docs/**"),
+                                AntPathRequestMatcher.antMatcher("/swagger-ui/**"),
+                                AntPathRequestMatcher.antMatcher("/swagger-ui.html"),
+                                AntPathRequestMatcher.antMatcher("/error")
                         ).permitAll()
                         .anyRequest().authenticated()
+                )
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            Map<String, Object> errorBody = new LinkedHashMap<>();
+                            errorBody.put("timestamp", LocalDateTime.now().toString());
+                            errorBody.put("status", HttpServletResponse.SC_UNAUTHORIZED);
+                            errorBody.put("error", "Unauthorized");
+                            errorBody.put("message", "Authentication required. Please provide a valid Bearer token in the Authorization header.");
+                            errorBody.put("path", request.getRequestURI());
+                            new ObjectMapper().writeValue(response.getOutputStream(), errorBody);
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            Map<String, Object> errorBody = new LinkedHashMap<>();
+                            errorBody.put("timestamp", LocalDateTime.now().toString());
+                            errorBody.put("status", HttpServletResponse.SC_FORBIDDEN);
+                            errorBody.put("error", "Forbidden");
+                            errorBody.put("message", "Access denied: You do not have permission to access this resource.");
+                            errorBody.put("path", request.getRequestURI());
+                            new ObjectMapper().writeValue(response.getOutputStream(), errorBody);
+                        })
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

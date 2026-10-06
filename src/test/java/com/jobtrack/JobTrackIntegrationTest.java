@@ -34,6 +34,13 @@ class JobTrackIntegrationTest {
     private ObjectMapper objectMapper;
 
     @Test
+    @DisplayName("Should allow public access to root dashboard")
+    void testRootEndpointReturnsOk() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     @DisplayName("Should successfully register a new user and login")
     void testRegisterAndLogin() throws Exception {
         RegisterRequest registerRequest = new RegisterRequest(
@@ -75,7 +82,9 @@ class JobTrackIntegrationTest {
     @DisplayName("Should reject unauthenticated access to protected endpoints")
     void testUnauthenticatedAccess() throws Exception {
         mockMvc.perform(get("/api/v1/applications"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.error").value("Unauthorized"));
     }
 
     @Test
