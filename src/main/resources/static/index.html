@@ -459,6 +459,22 @@
         <h4 style="margin-top: 20px; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px;">Notes</h4>
         <div id="detailNotesList" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;"></div>
 
+        <h4 style="margin-top: 20px; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px;">Attached Documents & Resumes</h4>
+        <div id="detailDocumentsList" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;"></div>
+        
+        <form onsubmit="handleUploadDocument(event)" style="display: flex; gap: 8px; align-items: center; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 6px; border: 1px dashed var(--border); margin-bottom: 16px; flex-wrap: wrap;">
+            <select id="docTypeSelect" style="width: 140px;">
+                <option value="RESUME">Resume</option>
+                <option value="COVER_LETTER">Cover Letter</option>
+                <option value="OFFER_LETTER">Offer Letter</option>
+                <option value="TRANSCRIPT">Transcript</option>
+                <option value="PORTFOLIO">Portfolio</option>
+                <option value="OTHER">Other</option>
+            </select>
+            <input type="file" id="docFileInput" required style="padding: 4px; font-size: 0.8rem; flex: 1; min-width: 180px;">
+            <button type="submit" class="btn" style="white-space: nowrap;">📎 Upload</button>
+        </form>
+
         <div style="display: flex; justify-content: flex-end;">
             <button class="btn btn-outline" onclick="closeModal('detailsModal')">Close</button>
         </div>
@@ -668,7 +684,98 @@ function viewDetails(id) {
         noteDiv.innerHTML = '<p>No notes recorded yet.</p>';
     }
 
+    loadApplicationDocuments(id);
     openModal('detailsModal');
+}
+
+async function loadApplicationDocuments(appId) {
+    const docDiv = document.getElementById('detailDocumentsList');
+    try {
+        const docs = await api(`/api/v1/applications/${appId}/documents`);
+        if (!docs || !docs.length) {
+            docDiv.innerHTML = '<p>No documents attached yet.</p>';
+            return;
+        }
+        docDiv.innerHTML = docs.map(d => `
+            <div style="background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 4px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong>${escapeHtml(d.originalFileName)}</strong>
+                    <span class="badge badge-INTERVIEWING" style="margin-left: 6px;">${d.documentType}</span>
+                    <span style="font-size: 0.8rem; color: var(--text-muted); margin-left: 6px;">(${d.formattedFileSize})</span>
+                </div>
+                <div style="display: flex; gap: 6px;">
+                    <button type="button" class="btn btn-outline" style="padding: 2px 8px; font-size: 0.75rem;" onclick="downloadDocument(${d.id}, '${escapeHtml(d.originalFileName)}')">⬇ Download</button>
+                    <button type="button" class="btn btn-outline" style="padding: 2px 8px; font-size: 0.75rem; color: var(--danger); border-color: rgba(239,68,68,0.3);" onclick="handleDeleteDocument(${d.id})">✕</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        docDiv.innerHTML = '<p style="color: var(--danger);">Failed to load documents</p>';
+    }
+}
+
+async function downloadDocument(docId, fileName) {
+    try {
+        const res = await fetch(`/api/v1/documents/${docId}/download`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!res.ok) throw new Error('Failed to download document');
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+    } catch (e) {
+        showToast(e.message);
+    }
+}
+
+async function handleUploadDocument(e) {
+    e.preventDefault();
+    const fileInput = document.getElementById('docFileInput');
+    if (!fileInput.files.length) return;
+    const file = fileInput.files[0];
+    const docType = document.getElementById('docTypeSelect').value;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('documentType', docType);
+
+    try {
+        const res = await fetch(`/api/v1/applications/${selectedAppId}/documents`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: formData
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({ message: res.statusText }));
+            throw new Error(err.message || 'Upload failed');
+        }
+        showToast('Document uploaded successfully!');
+        fileInput.value = '';
+        await loadApplicationDocuments(selectedAppId);
+        await loadApplications();
+    } catch (e) {
+        showToast(e.message);
+    }
+}
+
+async function handleDeleteDocument(docId) {
+    if (!confirm('Are you sure you want to delete this document?')) return;
+    try {
+        await api(`/api/v1/documents/${docId}`, { method: 'DELETE' });
+        showToast('Document deleted');
+        await loadApplicationDocuments(selectedAppId);
+        await loadApplications();
+    } catch (e) {
+        showToast(e.message);
+    }
 }
 
 async function handleStatusUpdate() {

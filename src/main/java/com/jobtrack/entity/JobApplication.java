@@ -61,6 +61,9 @@ public class JobApplication {
     @OneToMany(mappedBy = "jobApplication", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Note> notes = new ArrayList<>();
 
+    @OneToMany(mappedBy = "jobApplication", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DocumentAttachment> documents = new ArrayList<>();
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -111,6 +114,16 @@ public class JobApplication {
     public void removeNote(Note note) {
         notes.remove(note);
         note.setJobApplication(null);
+    }
+
+    public void addDocument(DocumentAttachment document) {
+        documents.add(document);
+        document.setJobApplication(this);
+    }
+
+    public void removeDocument(DocumentAttachment document) {
+        documents.remove(document);
+        document.setJobApplication(null);
     }
 
     // Getters and Setters
@@ -232,6 +245,14 @@ public class JobApplication {
 
     public void setNotes(List<Note> notes) {
         this.notes = notes;
+    }
+
+    public List<DocumentAttachment> getDocuments() {
+        return documents;
+    }
+
+    public void setDocuments(List<DocumentAttachment> documents) {
+        this.documents = documents;
     }
 
     public LocalDateTime getCreatedAt() {

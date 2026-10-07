@@ -28,6 +28,7 @@ public class JobApplicationResponse {
     private LocalDate deadline;
     private List<InterviewResponse> interviews = new ArrayList<>();
     private List<NoteResponse> notes = new ArrayList<>();
+    private List<DocumentResponse> documents = new ArrayList<>();
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -62,6 +63,12 @@ public class JobApplicationResponse {
         if (app.getNotes() != null) {
             response.setNotes(app.getNotes().stream()
                     .map(NoteResponse::fromEntity)
+                    .collect(Collectors.toList()));
+        }
+
+        if (app.getDocuments() != null) {
+            response.setDocuments(app.getDocuments().stream()
+                    .map(DocumentResponse::fromEntity)
                     .collect(Collectors.toList()));
         }
 
@@ -188,6 +195,14 @@ public class JobApplicationResponse {
 
     public void setNotes(List<NoteResponse> notes) {
         this.notes = notes;
+    }
+
+    public List<DocumentResponse> getDocuments() {
+        return documents;
+    }
+
+    public void setDocuments(List<DocumentResponse> documents) {
+        this.documents = documents;
     }
 
     public LocalDateTime getCreatedAt() {

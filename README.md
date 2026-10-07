@@ -246,7 +246,39 @@ curl -X GET http://localhost:8080/api/v1/applications/1/notes \
 
 ---
 
-### 5. Analytics & Dashboard Stats
+### 5. Document & Resume Attachments
+
+#### Upload a Document (Multipart)
+```bash
+curl -X POST http://localhost:8080/api/v1/applications/1/documents \
+  -H "Authorization: Bearer <TOKEN>" \
+  -F "file=@/path/to/resume.pdf" \
+  -F "documentType=RESUME"
+```
+*(Document types: `RESUME`, `COVER_LETTER`, `OFFER_LETTER`, `TRANSCRIPT`, `PORTFOLIO`, `OTHER`)*
+
+#### List Documents for an Application
+```bash
+curl -X GET http://localhost:8080/api/v1/applications/1/documents \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+#### Download a Document
+```bash
+curl -X GET http://localhost:8080/api/v1/documents/1/download \
+  -H "Authorization: Bearer <TOKEN>" \
+  -O -J
+```
+
+#### Delete a Document
+```bash
+curl -X DELETE http://localhost:8080/api/v1/documents/1 \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+---
+
+### 6. Analytics & Dashboard Stats
 
 #### Get Pipeline Metrics
 ```bash

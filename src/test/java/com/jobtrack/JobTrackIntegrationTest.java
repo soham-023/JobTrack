@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -188,5 +189,80 @@ class JobTrackIntegrationTest {
                 .andExpect(jsonPath("$.totalInterviews").value(1))
                 .andExpect(jsonPath("$.upcomingInterviewsCount").value(1))
                 .andExpect(jsonPath("$.statusCounts.INTERVIEWING").value(1));
+    }
+
+    @Test
+    @DisplayName("Should successfully upload, list, download, and delete a document attachment")
+    void testDocumentAttachmentLifecycle() throws Exception {
+        RegisterRequest registerReq = new RegisterRequest("doc.user@example.com", "password123", "Doc User");
+        MvcResult regResult = mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerReq)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String token = "Bearer " + objectMapper.readTree(regResult.getResponse().getContentAsString()).get("token").asText();
+
+        // Create Application
+        CreateJobApplicationRequest appReq = new CreateJobApplicationRequest();
+        appReq.setCompanyName("GitHub");
+        appReq.setJobTitle("Platform Engineer");
+        MvcResult appResult = mockMvc.perform(post("/api/v1/applications")
+                        .header("Authorization", token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(appReq)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        long appId = objectMapper.readTree(appResult.getResponse().getContentAsString()).get("id").asLong();
+
+        // 1. Upload Document (PDF)
+        byte[] pdfContent = "%PDF-1.4 Mock resume content for testing".getBytes();
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "Senior_Resume.pdf",
+                "application/pdf",
+                pdfContent
+        );
+
+        MvcResult uploadResult = mockMvc.perform(multipart("/api/v1/applications/" + appId + "/documents")
+                        .file(file)
+                        .param("documentType", "RESUME")
+                        .header("Authorization", token))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.originalFileName").value("Senior_Resume.pdf"))
+                .andExpect(jsonPath("$.documentType").value("RESUME"))
+                .andExpect(jsonPath("$.downloadUrl").isString())
+                .andReturn();
+
+        long docId = objectMapper.readTree(uploadResult.getResponse().getContentAsString()).get("id").asLong();
+
+        // 2. List Documents for Application
+        mockMvc.perform(get("/api/v1/applications/" + appId + "/documents")
+                        .header("Authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(docId))
+                .andExpect(jsonPath("$[0].originalFileName").value("Senior_Resume.pdf"));
+
+        // 3. Download Document
+        MvcResult downloadResult = mockMvc.perform(get("/api/v1/documents/" + docId + "/download")
+                        .header("Authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition", "attachment; filename=\"Senior_Resume.pdf\""))
+                .andReturn();
+
+        assertThat(downloadResult.getResponse().getContentAsByteArray()).isEqualTo(pdfContent);
+
+        // 4. Delete Document
+        mockMvc.perform(delete("/api/v1/documents/" + docId)
+                        .header("Authorization", token))
+                .andExpect(status().isNoContent());
+
+        // 5. Verify Document is gone
+        mockMvc.perform(get("/api/v1/applications/" + appId + "/documents")
+                        .header("Authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 }
