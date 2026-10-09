@@ -47,6 +47,9 @@ public class Interview {
     @Column(length = 2000)
     private String notes;
 
+    @Column(nullable = false)
+    private boolean reminderSent = false;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -162,6 +165,14 @@ public class Interview {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public boolean isReminderSent() {
+        return reminderSent;
+    }
+
+    public void setReminderSent(boolean reminderSent) {
+        this.reminderSent = reminderSent;
     }
 
     public LocalDateTime getCreatedAt() {

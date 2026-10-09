@@ -32,15 +32,18 @@ public class DataInitializer implements CommandLineRunner {
     private final JobApplicationRepository jobApplicationRepository;
     private final InterviewRepository interviewRepository;
     private final PasswordEncoder passwordEncoder;
+    private final com.jobtrack.service.InterviewReminderService interviewReminderService;
 
     public DataInitializer(UserRepository userRepository,
                            JobApplicationRepository jobApplicationRepository,
                            InterviewRepository interviewRepository,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder,
+                           com.jobtrack.service.InterviewReminderService interviewReminderService) {
         this.userRepository = userRepository;
         this.jobApplicationRepository = jobApplicationRepository;
         this.interviewRepository = interviewRepository;
         this.passwordEncoder = passwordEncoder;
+        this.interviewReminderService = interviewReminderService;
     }
 
     @Override
@@ -81,7 +84,7 @@ public class DataInitializer implements CommandLineRunner {
         interview1.setJobApplication(app1);
         interview1.setRoundName("System Design Round");
         interview1.setInterviewType(InterviewType.SYSTEM_DESIGN);
-        interview1.setScheduledAt(LocalDateTime.now().plusDays(2).withHour(15).withMinute(0));
+        interview1.setScheduledAt(LocalDateTime.now().plusHours(18));
         interview1.setInterviewerName("Sarah Connor");
         interview1.setInterviewerEmail("sconnor@google.com");
         interview1.setLocationOrLink("https://meet.google.com/abc-defg-hij");
@@ -145,6 +148,9 @@ public class DataInitializer implements CommandLineRunner {
         interview2.setLocationOrLink("https://chime.aws/12345678");
         interview2.setStatus(InterviewStatus.SCHEDULED);
         interviewRepository.save(interview2);
+
+        // Run initial reminder check on seeded data
+        interviewReminderService.checkAndSendReminders();
 
         log.info("Demo data seeding completed. Demo credentials: demo@jobtrack.com / password123");
     }

@@ -265,4 +265,95 @@ class JobTrackIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
+
+    @Test
+    @DisplayName("Should detect upcoming interviews within 24h window and create reminders without duplicates")
+    void testScheduledInterviewReminders() throws Exception {
+        RegisterRequest registerReq = new RegisterRequest("remind.user@example.com", "password123", "Reminder Tester");
+        MvcResult regResult = mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerReq)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String token = "Bearer " + objectMapper.readTree(regResult.getResponse().getContentAsString()).get("token").asText();
+
+        // 1. Create Application
+        CreateJobApplicationRequest appReq = new CreateJobApplicationRequest();
+        appReq.setCompanyName("Spotify");
+        appReq.setJobTitle("Backend Engineer");
+        MvcResult appResult = mockMvc.perform(post("/api/v1/applications")
+                        .header("Authorization", token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(appReq)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        long appId = objectMapper.readTree(appResult.getResponse().getContentAsString()).get("id").asLong();
+
+        // 2. Add an interview in 8 hours (within 24h lookahead)
+        CreateInterviewRequest nearInterview = new CreateInterviewRequest();
+        nearInterview.setRoundName("Live Coding Session");
+        nearInterview.setInterviewType(InterviewType.TECHNICAL);
+        nearInterview.setScheduledAt(LocalDateTime.now().plusHours(8));
+        nearInterview.setLocationOrLink("https://spotify.zoom.us/j/12345");
+
+        mockMvc.perform(post("/api/v1/applications/" + appId + "/interviews")
+                        .header("Authorization", token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(nearInterview)))
+                .andExpect(status().isCreated());
+
+        // 3. Add an interview in 4 days (outside 24h lookahead)
+        CreateInterviewRequest farInterview = new CreateInterviewRequest();
+        farInterview.setRoundName("Leadership Principles");
+        farInterview.setInterviewType(InterviewType.BEHAVIORAL);
+        farInterview.setScheduledAt(LocalDateTime.now().plusDays(4));
+
+        mockMvc.perform(post("/api/v1/applications/" + appId + "/interviews")
+                        .header("Authorization", token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(farInterview)))
+                .andExpect(status().isCreated());
+
+        // 4. Trigger manual check (or background scheduler trigger)
+        mockMvc.perform(post("/api/v1/notifications/check-now")
+                        .header("Authorization", token))
+                .andExpect(status().isOk());
+
+        // 5. Fetch user notifications
+        MvcResult notifResult = mockMvc.perform(get("/api/v1/notifications")
+                        .header("Authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].title").value(org.hamcrest.Matchers.containsString("Live Coding Session")))
+                .andExpect(jsonPath("$[0].companyName").value("Spotify"))
+                .andExpect(jsonPath("$[0].read").value(false))
+                .andReturn();
+
+        long notifId = objectMapper.readTree(notifResult.getResponse().getContentAsString()).get(0).get("id").asLong();
+
+        // 6. Check unread count
+        mockMvc.perform(get("/api/v1/notifications/unread-count")
+                        .header("Authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.unreadCount").value(1));
+
+        // 7. Mark as read
+        mockMvc.perform(patch("/api/v1/notifications/" + notifId + "/read")
+                        .header("Authorization", token))
+                .andExpect(status().isNoContent());
+
+        // 8. Verify unread count is 0
+        mockMvc.perform(get("/api/v1/notifications/unread-count")
+                        .header("Authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.unreadCount").value(0));
+
+        // 9. Re-trigger check: ensure no duplicate reminder is generated for the same interview
+        mockMvc.perform(post("/api/v1/notifications/check-now")
+                        .header("Authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.remindersCreated").value(0));
+    }
 }

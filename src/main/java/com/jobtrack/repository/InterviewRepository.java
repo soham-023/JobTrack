@@ -21,4 +21,6 @@ public interface InterviewRepository extends JpaRepository<Interview, Long> {
     long countByJobApplicationUserIdAndScheduledAtAfterAndStatus(Long userId, LocalDateTime now, InterviewStatus status);
 
     List<Interview> findByJobApplicationUserIdAndScheduledAtAfterOrderByScheduledAtAsc(Long userId, LocalDateTime now);
+
+    List<Interview> findByStatusAndReminderSentFalseAndScheduledAtBetween(InterviewStatus status, LocalDateTime start, LocalDateTime end);
 }

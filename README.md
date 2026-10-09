@@ -311,6 +311,35 @@ curl -X GET http://localhost:8080/api/v1/analytics/stats \
 
 ---
 
+### 7. Scheduled Interview Reminders & Alerts
+
+#### List User Notifications
+```bash
+# Get all notifications (or ?unreadOnly=true for unread only)
+curl -X GET "http://localhost:8080/api/v1/notifications?unreadOnly=false" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+#### Get Unread Count
+```bash
+curl -X GET http://localhost:8080/api/v1/notifications/unread-count \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+#### Mark Notification as Read
+```bash
+curl -X PATCH http://localhost:8080/api/v1/notifications/1/read \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+#### Trigger On-Demand Reminder Scan
+```bash
+curl -X POST http://localhost:8080/api/v1/notifications/check-now \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+---
+
 ## 🗃️ H2 In-Memory Database Web Console
 
 To inspect the database tables directly in your browser:

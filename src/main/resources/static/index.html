@@ -289,6 +289,9 @@
         </div>
         <div class="header-actions">
             <a href="/h2-console" target="_blank" class="btn btn-outline">🗃️ Open H2 Console</a>
+            <button onclick="openNotificationsModal()" id="notifBellBtn" class="btn btn-outline" style="display:none; position: relative;">
+                🔔 Reminders <span id="notifBadge" style="display:none; background: var(--danger); color: white; border-radius: 999px; padding: 1px 6px; font-size: 0.75rem; font-weight: bold; margin-left: 4px;">0</span>
+            </button>
             <button onclick="openModal('addAppModal')" id="newAppBtn" style="display:none;">+ New Application</button>
         </div>
     </header>
@@ -481,6 +484,25 @@
     </div>
 </div>
 
+<!-- Reminders / Notifications Modal -->
+<div class="modal" id="notifModal">
+    <div class="modal-content" style="max-width: 580px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+            <h3>🔔 Upcoming Interview Alerts</h3>
+            <div style="display: flex; gap: 8px;">
+                <button onclick="handleTriggerReminders()" class="btn btn-outline" style="font-size: 0.8rem; padding: 4px 8px;">🔄 Scan Now</button>
+                <button onclick="handleMarkAllRead()" class="btn btn-outline" style="font-size: 0.8rem; padding: 4px 8px;">Mark All Read</button>
+            </div>
+        </div>
+        <div id="notifList" style="max-height: 380px; overflow-y: auto; font-size: 0.9rem;">
+            <p style="color: var(--text-muted); text-align: center; padding: 20px;">No reminders yet.</p>
+        </div>
+        <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
+            <button class="btn btn-outline" onclick="closeModal('notifModal')">Close</button>
+        </div>
+    </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -570,10 +592,12 @@ function setLoggedIn(token, user) {
     document.getElementById('authSubText').innerText = `Role: ${user.role} • Active JWT session`;
     document.getElementById('authActions').innerHTML = `<button onclick="logout()" class="btn btn-outline">Log Out</button>`;
     document.getElementById('newAppBtn').style.display = 'inline-flex';
+    document.getElementById('notifBellBtn').style.display = 'inline-flex';
     document.getElementById('statsGrid').style.display = 'grid';
     document.getElementById('appContent').style.display = 'block';
     loadAnalytics();
     loadApplications();
+    loadNotificationCount();
 }
 
 function logout() {
@@ -586,8 +610,87 @@ function logout() {
         <button onclick="openModal('authModal')" class="btn btn-secondary">Custom Login / Register</button>
     `;
     document.getElementById('newAppBtn').style.display = 'none';
+    document.getElementById('notifBellBtn').style.display = 'none';
     document.getElementById('statsGrid').style.display = 'none';
     document.getElementById('appContent').style.display = 'none';
+}
+
+async function loadNotificationCount() {
+    if (!authToken) return;
+    try {
+        const res = await api('/api/v1/notifications/unread-count');
+        const badge = document.getElementById('notifBadge');
+        if (res && res.unreadCount > 0) {
+            badge.innerText = res.unreadCount;
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
+        }
+    } catch (e) {
+        // silent fail
+    }
+}
+
+async function openNotificationsModal() {
+    openModal('notifModal');
+    await loadNotificationsList();
+}
+
+async function loadNotificationsList() {
+    const list = document.getElementById('notifList');
+    try {
+        const notifs = await api('/api/v1/notifications');
+        if (!notifs || !notifs.length) {
+            list.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">No interview reminders recorded yet. Reminders are generated automatically when an interview is scheduled within 24 hours.</p>';
+            return;
+        }
+        list.innerHTML = notifs.map(n => `
+            <div style="background: ${n.isRead ? 'rgba(255,255,255,0.02)' : 'rgba(79,70,229,0.1)'}; border: 1px solid ${n.isRead ? 'var(--border)' : 'var(--primary)'}; border-radius: 6px; padding: 12px; margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                    <div>
+                        <strong style="color: ${n.isRead ? 'var(--text-main)' : '#818cf8'}; font-size: 0.95rem;">${escapeHtml(n.title)}</strong>
+                        <p style="margin-top: 4px; color: var(--text-main); font-size: 0.85rem; line-height: 1.4;">${escapeHtml(n.message)}</p>
+                        <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; display: inline-block;">${new Date(n.createdAt).toLocaleString()}</span>
+                    </div>
+                    ${!n.isRead ? `<button onclick="handleMarkAsRead(${n.id})" class="btn btn-outline" style="font-size: 0.75rem; padding: 2px 6px; white-space: nowrap;">Mark Read</button>` : ''}
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        list.innerHTML = `<p style="color: var(--danger); text-align: center;">Failed to load reminders: ${e.message}</p>`;
+    }
+}
+
+async function handleMarkAsRead(id) {
+    try {
+        await api(`/api/v1/notifications/${id}/read`, { method: 'PATCH' });
+        await loadNotificationCount();
+        await loadNotificationsList();
+    } catch (e) {
+        showToast(e.message);
+    }
+}
+
+async function handleMarkAllRead() {
+    try {
+        await api('/api/v1/notifications/read-all', { method: 'PATCH' });
+        showToast('All reminders marked as read');
+        await loadNotificationCount();
+        await loadNotificationsList();
+    } catch (e) {
+        showToast(e.message);
+    }
+}
+
+async function handleTriggerReminders() {
+    try {
+        const res = await api('/api/v1/notifications/check-now', { method: 'POST' });
+        showToast(`Scan complete: ${res.remindersCreated} new reminder(s) found!`);
+        await loadNotificationCount();
+        await loadNotificationsList();
+    } catch (e) {
+        showToast(e.message);
+    }
 }
 
 async function loadAnalytics() {
