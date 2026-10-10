@@ -356,4 +356,64 @@ class JobTrackIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.remindersCreated").value(0));
     }
+
+    @Test
+    @DisplayName("Should export user job applications as RFC 4180 formatted CSV spreadsheet")
+    void testExportApplicationsCsv() throws Exception {
+        RegisterRequest registerReq = new RegisterRequest("csv.tester@example.com", "password123", "CSV Candidate");
+        MvcResult regResult = mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerReq)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String token = "Bearer " + objectMapper.readTree(regResult.getResponse().getContentAsString()).get("token").asText();
+
+        // 1. Create 2 Applications
+        CreateJobApplicationRequest app1 = new CreateJobApplicationRequest();
+        app1.setCompanyName("Tesla");
+        app1.setJobTitle("Autopilot Software Engineer");
+        app1.setStatus(ApplicationStatus.APPLIED);
+        mockMvc.perform(post("/api/v1/applications")
+                        .header("Authorization", token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(app1)))
+                .andExpect(status().isCreated());
+
+        CreateJobApplicationRequest app2 = new CreateJobApplicationRequest();
+        app2.setCompanyName("Apple");
+        app2.setJobTitle("CoreOS Software Engineer");
+        app2.setStatus(ApplicationStatus.INTERVIEWING);
+        mockMvc.perform(post("/api/v1/applications")
+                        .header("Authorization", token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(app2)))
+                .andExpect(status().isCreated());
+
+        // 2. Export All Applications to CSV
+        MvcResult exportResult = mockMvc.perform(get("/api/v1/applications/export")
+                        .header("Authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("job_applications_")))
+                .andExpect(header().string("Content-Type", org.hamcrest.Matchers.containsString("text/csv")))
+                .andReturn();
+
+        String csvBody = new String(exportResult.getResponse().getContentAsByteArray(), java.nio.charset.StandardCharsets.UTF_8);
+
+        assertThat(csvBody).contains("Application ID,Company Name,Job Title,Status");
+        assertThat(csvBody).contains("Tesla");
+        assertThat(csvBody).contains("Autopilot Software Engineer");
+        assertThat(csvBody).contains("Apple");
+        assertThat(csvBody).contains("CoreOS Software Engineer");
+
+        // 3. Export Filtered by Status (INTERVIEWING only)
+        MvcResult filteredResult = mockMvc.perform(get("/api/v1/applications/export?status=INTERVIEWING")
+                        .header("Authorization", token))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String filteredCsv = new String(filteredResult.getResponse().getContentAsByteArray(), java.nio.charset.StandardCharsets.UTF_8);
+        assertThat(filteredCsv).contains("Apple");
+        assertThat(filteredCsv).doesNotContain("Tesla");
+    }
 }

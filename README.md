@@ -34,6 +34,9 @@ JobTrack allows job seekers to track their applications through every stage of t
   - Response rate % (applications moving beyond applied stage).
   - Offer conversion rate %.
   - Upcoming interview schedule and countdown.
+- 📥 **CSV Export**:
+  - Download application history as an RFC 4180-compliant `.csv` file with UTF-8 BOM support.
+  - Filters by application status and search keyword, or exports complete application records with one click.
 - 🗄️ **Zero-Friction In-Memory Database**:
   - Pre-configured H2 database with web console at `/h2-console`.
   - Automated seed data initialized at startup for immediate testing.
@@ -337,6 +340,19 @@ curl -X PATCH http://localhost:8080/api/v1/notifications/1/read \
 curl -X POST http://localhost:8080/api/v1/notifications/check-now \
   -H "Authorization: Bearer <TOKEN>"
 ```
+
+---
+
+### 8. CSV Data Export
+
+#### Export Job Applications as CSV
+```bash
+# Export all applications (or with optional ?status=... and &search=... query parameters)
+curl -X GET "http://localhost:8080/api/v1/applications/export?status=INTERVIEWING" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -O -J
+```
+*Saves an RFC 4180-compliant `.csv` file with BOM encoding (e.g., `jobtrack-applications-2026-10-10.csv`), compatible directly with Microsoft Excel, Apple Numbers, and Google Sheets.*
 
 ---
 

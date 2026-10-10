@@ -14,9 +14,12 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/v1/applications")
@@ -57,6 +60,20 @@ public class JobApplicationController {
                 currentUser, status, employmentType, search, pageable
         );
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(value = "/export", produces = "text/csv; charset=UTF-8")
+    public ResponseEntity<byte[]> exportApplications(
+            @RequestParam(required = false) ApplicationStatus status
+    ) {
+        User currentUser = authService.getCurrentAuthenticatedUser();
+        byte[] csvData = jobApplicationService.exportApplicationsCsv(currentUser, status);
+        String filename = "job_applications_" + LocalDate.now() + ".csv";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .header(HttpHeaders.CONTENT_TYPE, "text/csv; charset=UTF-8")
+                .body(csvData);
     }
 
     @GetMapping("/{id}")

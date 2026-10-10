@@ -23,9 +23,12 @@ import java.time.LocalDate;
 public class JobApplicationService {
 
     private final JobApplicationRepository jobApplicationRepository;
+    private final CsvExportService csvExportService;
 
-    public JobApplicationService(JobApplicationRepository jobApplicationRepository) {
+    public JobApplicationService(JobApplicationRepository jobApplicationRepository,
+                                 CsvExportService csvExportService) {
         this.jobApplicationRepository = jobApplicationRepository;
+        this.csvExportService = csvExportService;
     }
 
     @Transactional
@@ -130,6 +133,12 @@ public class JobApplicationService {
     public void deleteApplication(User user, Long applicationId) {
         JobApplication application = findApplicationOrThrow(applicationId, user.getId());
         jobApplicationRepository.delete(application);
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] exportApplicationsCsv(User user, ApplicationStatus status) {
+        java.util.List<JobApplication> applications = jobApplicationRepository.findAllForExport(user.getId(), status);
+        return csvExportService.generateApplicationsCsv(applications);
     }
 
     public JobApplication findApplicationOrThrow(Long applicationId, Long userId) {

@@ -352,7 +352,10 @@
                     <option value="REJECTED">Rejected</option>
                 </select>
             </div>
-            <button class="btn btn-outline" onclick="loadApplications()">🔄 Refresh</button>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn btn-outline" onclick="handleExportCsv()">📥 Export CSV</button>
+                <button class="btn btn-outline" onclick="loadApplications()">🔄 Refresh</button>
+            </div>
         </div>
 
         <div style="overflow-x: auto;">
@@ -922,6 +925,33 @@ async function handleCreateApp(e) {
         document.getElementById('addNotes').value = '';
         await loadAnalytics();
         await loadApplications();
+    } catch (e) {
+        showToast(e.message);
+    }
+}
+
+async function handleExportCsv() {
+    if (!authToken) {
+        showToast('Please log in first to export applications');
+        return;
+    }
+    const st = document.getElementById('statusFilter').value;
+    const url = `/api/v1/applications/export${st ? '?status=' + st : ''}`;
+    try {
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!res.ok) throw new Error('Failed to export CSV');
+        const blob = await res.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = `job_applications_${new Date().toISOString().slice(0,10)}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(downloadUrl);
+        a.remove();
+        showToast('CSV downloaded successfully!');
     } catch (e) {
         showToast(e.message);
     }

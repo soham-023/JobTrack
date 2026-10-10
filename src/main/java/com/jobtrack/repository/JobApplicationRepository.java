@@ -39,4 +39,9 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
 
     @Query("SELECT j.status, COUNT(j) FROM JobApplication j WHERE j.user.id = :userId GROUP BY j.status")
     List<Object[]> countByStatusForUser(@Param("userId") Long userId);
+
+    @Query("SELECT j FROM JobApplication j WHERE j.user.id = :userId " +
+           "AND (:status IS NULL OR j.status = :status) " +
+           "ORDER BY j.appliedDate DESC, j.createdAt DESC")
+    List<JobApplication> findAllForExport(@Param("userId") Long userId, @Param("status") ApplicationStatus status);
 }
