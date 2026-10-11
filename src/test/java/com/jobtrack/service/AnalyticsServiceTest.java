@@ -14,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +24,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+    
 class AnalyticsServiceTest {
     
 
@@ -40,6 +42,7 @@ class AnalyticsServiceTest {
     @BeforeEach
     void setUp() {
         testUser = new User("tester@example.com", "pass", "Tester", Role.ROLE_USER);
+        
         testUser.setId(10L);
     }
 
