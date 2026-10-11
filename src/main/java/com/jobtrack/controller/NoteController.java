@@ -6,6 +6,8 @@ import com.jobtrack.dto.response.NoteResponse;
 import com.jobtrack.entity.User;
 import com.jobtrack.service.AuthService;
 import com.jobtrack.service.NoteService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
+@Tag(name = "4. Application Notes", description = "Timestamped notes, interview prep insights, and recruiter correspondence tracking")
 public class NoteController {
 
     private final NoteService noteService;
@@ -26,6 +29,7 @@ public class NoteController {
     }
 
     @PostMapping("/applications/{applicationId}/notes")
+    @Operation(summary = "Add note to application", description = "Creates a timestamped note attached to the specified application.")
     public ResponseEntity<NoteResponse> addNote(
             @PathVariable Long applicationId,
             @Valid @RequestBody CreateNoteRequest request
@@ -36,6 +40,7 @@ public class NoteController {
     }
 
     @GetMapping("/applications/{applicationId}/notes")
+    @Operation(summary = "List notes for application", description = "Retrieves all timestamped notes for the application ordered chronologically.")
     public ResponseEntity<List<NoteResponse>> getNotesByApplication(@PathVariable Long applicationId) {
         User currentUser = authService.getCurrentAuthenticatedUser();
         List<NoteResponse> notes = noteService.getNotesByApplication(currentUser, applicationId);
@@ -43,6 +48,7 @@ public class NoteController {
     }
 
     @PutMapping("/notes/{id}")
+    @Operation(summary = "Update note", description = "Edits title and content of an existing note.")
     public ResponseEntity<NoteResponse> updateNote(
             @PathVariable Long id,
             @Valid @RequestBody UpdateNoteRequest request
@@ -53,6 +59,7 @@ public class NoteController {
     }
 
     @DeleteMapping("/notes/{id}")
+    @Operation(summary = "Delete note", description = "Deletes a specific note.")
     public ResponseEntity<Void> deleteNote(@PathVariable Long id) {
         User currentUser = authService.getCurrentAuthenticatedUser();
         noteService.deleteNote(currentUser, id);

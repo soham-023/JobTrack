@@ -416,4 +416,24 @@ class JobTrackIntegrationTest {
         assertThat(filteredCsv).contains("Apple");
         assertThat(filteredCsv).doesNotContain("Tesla");
     }
+
+    @Test
+    @DisplayName("Should serve OpenAPI JSON docs and Swagger UI without requiring authentication")
+    void testOpenApiDocsAndSwaggerUi() throws Exception {
+        // 1. Verify OpenAPI JSON docs at /v3/api-docs
+        MvcResult apiDocsResult = mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.openapi").isString())
+                .andExpect(jsonPath("$.info.title").value("JobTrack REST API"))
+                .andExpect(jsonPath("$.paths['/api/v1/auth/login']").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/applications']").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/applications/export']").exists())
+                .andExpect(jsonPath("$.components.securitySchemes.BearerAuth").exists())
+                .andReturn();
+
+        // 2. Verify Swagger UI web entry point is accessible publicly
+        mockMvc.perform(get("/swagger-ui/index.html"))
+                .andExpect(status().isOk());
+    }
 }

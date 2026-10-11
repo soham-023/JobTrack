@@ -37,6 +37,10 @@ JobTrack allows job seekers to track their applications through every stage of t
 - 📥 **CSV Export**:
   - Download application history as an RFC 4180-compliant `.csv` file with UTF-8 BOM support.
   - Filters by application status and search keyword, or exports complete application records with one click.
+- 📖 **Interactive Swagger UI & OpenAPI 3**:
+  - Full interactive REST API documentation explorer available at `/swagger-ui.html`.
+  - Global JWT Bearer authorization support for one-click in-browser endpoint testing.
+  - Raw JSON specification served at `/v3/api-docs`.
 - 🗄️ **Zero-Friction In-Memory Database**:
   - Pre-configured H2 database with web console at `/h2-console`.
   - Automated seed data initialized at startup for immediate testing.
@@ -52,6 +56,7 @@ src/main/java/com/jobtrack/
 ├── JobTrackApplication.java           # Spring Boot application entry point
 ├── config/
 │   ├── SecurityConfig.java            # Spring Security filter chain & CORS rules
+│   ├── OpenApiConfig.java             # Swagger UI & OpenAPI 3 specification configuration
 │   └── DataInitializer.java          # Seeds demo account & realistic job data
 ├── controller/                        # REST Controllers (handles HTTP req/resp)
 │   ├── AuthController.java            # /api/v1/auth
@@ -353,6 +358,30 @@ curl -X GET "http://localhost:8080/api/v1/applications/export?status=INTERVIEWIN
   -O -J
 ```
 *Saves an RFC 4180-compliant `.csv` file with BOM encoding (e.g., `jobtrack-applications-2026-10-10.csv`), compatible directly with Microsoft Excel, Apple Numbers, and Google Sheets.*
+
+---
+
+## 📖 Interactive Swagger UI & OpenAPI Specification
+
+JobTrack includes SpringDoc OpenAPI 3.0 documentation and an interactive Swagger UI.
+
+### 1. Access Swagger UI in Browser
+- **Swagger UI**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+- **OpenAPI JSON Spec**: [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+
+### 2. Testing Authenticated Endpoints via Swagger UI
+1. Scroll to **`1. Authentication`** -> `POST /api/v1/auth/login`.
+2. Click **Try it out** and execute with the demo credentials:
+   ```json
+   {
+     "email": "demo@jobtrack.com",
+     "password": "password123"
+   }
+   ```
+3. Copy the returned `token` string from the JSON response.
+4. Click the green **Authorize 🔓** button located at the top right of the Swagger UI page.
+5. In the **Value** field, enter your token (or `Bearer <your-token>`) and click **Authorize**.
+6. All secured endpoints (Applications, Interviews, Notes, Documents, Notifications, Analytics) can now be executed directly with live responses!
 
 ---
 

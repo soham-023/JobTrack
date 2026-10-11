@@ -10,6 +10,9 @@ import com.jobtrack.entity.enums.ApplicationStatus;
 import com.jobtrack.entity.enums.EmploymentType;
 import com.jobtrack.service.AuthService;
 import com.jobtrack.service.JobApplicationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +26,7 @@ import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/v1/applications")
+@Tag(name = "2. Job Applications", description = "CRUD operations, lifecycle tracking, filtering, and RFC 4180 CSV export")
 public class JobApplicationController {
 
     private final JobApplicationService jobApplicationService;
@@ -34,6 +38,7 @@ public class JobApplicationController {
     }
 
     @PostMapping
+    @Operation(summary = "Create a new job application", description = "Stores job title, company, URLs, salary expectations, and initial notes.")
     public ResponseEntity<JobApplicationResponse> createApplication(
             @Valid @RequestBody CreateJobApplicationRequest request
     ) {
@@ -43,6 +48,7 @@ public class JobApplicationController {
     }
 
     @GetMapping
+    @Operation(summary = "List job applications with filtering & pagination", description = "Filter by status and employment type, search keywords across company/title/location, and sort results.")
     public ResponseEntity<PagedResponse<JobApplicationResponse>> getApplications(
             @RequestParam(required = false) ApplicationStatus status,
             @RequestParam(required = false) EmploymentType employmentType,
@@ -63,6 +69,7 @@ public class JobApplicationController {
     }
 
     @GetMapping(value = "/export", produces = "text/csv; charset=UTF-8")
+    @Operation(summary = "Export applications as RFC 4180 CSV", description = "Generates a downloadable CSV spreadsheet with UTF-8 BOM, optionally filtered by status.")
     public ResponseEntity<byte[]> exportApplications(
             @RequestParam(required = false) ApplicationStatus status
     ) {
@@ -77,6 +84,7 @@ public class JobApplicationController {
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get application details by ID", description = "Returns full application record with attached interviews and notes.")
     public ResponseEntity<JobApplicationResponse> getApplicationById(@PathVariable Long id) {
         User currentUser = authService.getCurrentAuthenticatedUser();
         JobApplicationResponse response = jobApplicationService.getApplicationById(currentUser, id);
@@ -84,6 +92,7 @@ public class JobApplicationController {
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Update job application", description = "Updates job details, salary range, dates, and employment metadata.")
     public ResponseEntity<JobApplicationResponse> updateApplication(
             @PathVariable Long id,
             @Valid @RequestBody UpdateJobApplicationRequest request
@@ -94,6 +103,7 @@ public class JobApplicationController {
     }
 
     @PatchMapping("/{id}/status")
+    @Operation(summary = "Update application status lifecycle", description = "Promotes or updates status (e.g. APPLIED -> INTERVIEWING -> OFFER) and automatically creates an audit note.")
     public ResponseEntity<JobApplicationResponse> updateStatus(
             @PathVariable Long id,
             @Valid @RequestBody UpdateStatusRequest request
@@ -104,6 +114,7 @@ public class JobApplicationController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Delete job application", description = "Permanently deletes an application and all associated rounds, notes, and documents.")
     public ResponseEntity<Void> deleteApplication(@PathVariable Long id) {
         User currentUser = authService.getCurrentAuthenticatedUser();
         jobApplicationService.deleteApplication(currentUser, id);

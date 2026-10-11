@@ -6,6 +6,8 @@ import com.jobtrack.dto.response.InterviewResponse;
 import com.jobtrack.entity.User;
 import com.jobtrack.service.AuthService;
 import com.jobtrack.service.InterviewService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
+@Tag(name = "3. Interview Rounds", description = "Schedule and manage interview rounds, links, and auto-lifecycle transitions")
 public class InterviewController {
 
     private final InterviewService interviewService;
@@ -26,6 +29,7 @@ public class InterviewController {
     }
 
     @PostMapping("/applications/{applicationId}/interviews")
+    @Operation(summary = "Schedule an interview round", description = "Schedules round, interviewer details, and video link. Automatically promotes application status to INTERVIEWING.")
     public ResponseEntity<InterviewResponse> addInterview(
             @PathVariable Long applicationId,
             @Valid @RequestBody CreateInterviewRequest request
@@ -36,6 +40,7 @@ public class InterviewController {
     }
 
     @GetMapping("/applications/{applicationId}/interviews")
+    @Operation(summary = "Get all interviews for an application", description = "Retrieves chronological list of interview rounds for the specified application.")
     public ResponseEntity<List<InterviewResponse>> getInterviewsByApplication(@PathVariable Long applicationId) {
         User currentUser = authService.getCurrentAuthenticatedUser();
         List<InterviewResponse> interviews = interviewService.getInterviewsByApplication(currentUser, applicationId);
@@ -43,6 +48,7 @@ public class InterviewController {
     }
 
     @GetMapping("/interviews/{id}")
+    @Operation(summary = "Get interview by ID", description = "Returns interview details, type, feedback, and notes.")
     public ResponseEntity<InterviewResponse> getInterviewById(@PathVariable Long id) {
         User currentUser = authService.getCurrentAuthenticatedUser();
         InterviewResponse response = interviewService.getInterviewById(currentUser, id);
@@ -50,6 +56,7 @@ public class InterviewController {
     }
 
     @PutMapping("/interviews/{id}")
+    @Operation(summary = "Update interview round", description = "Updates interview schedule, interviewer info, feedback, and status.")
     public ResponseEntity<InterviewResponse> updateInterview(
             @PathVariable Long id,
             @Valid @RequestBody UpdateInterviewRequest request
@@ -60,6 +67,7 @@ public class InterviewController {
     }
 
     @DeleteMapping("/interviews/{id}")
+    @Operation(summary = "Delete interview round", description = "Removes interview round record.")
     public ResponseEntity<Void> deleteInterview(@PathVariable Long id) {
         User currentUser = authService.getCurrentAuthenticatedUser();
         interviewService.deleteInterview(currentUser, id);

@@ -6,6 +6,10 @@ import com.jobtrack.entity.User;
 import com.jobtrack.entity.enums.DocumentType;
 import com.jobtrack.service.AuthService;
 import com.jobtrack.service.DocumentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -18,6 +22,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
+@Tag(name = "5. Documents & Resumes", description = "Multipart file upload, document retrieval, binary streaming, and deletion")
 public class DocumentController {
 
     private final DocumentService documentService;
@@ -29,10 +34,11 @@ public class DocumentController {
     }
 
     @PostMapping(value = "/applications/{applicationId}/documents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload resume or document attachment", description = "Uploads a file (PDF, DOCX, TXT, PNG, etc.) attached to an application.")
     public ResponseEntity<DocumentResponse> uploadDocument(
             @PathVariable Long applicationId,
-            @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "documentType", defaultValue = "RESUME") DocumentType documentType
+            @Parameter(description = "File to upload", required = true) @RequestParam("file") MultipartFile file,
+            @Parameter(description = "Document type (RESUME, COVER_LETTER, etc.)") @RequestParam(value = "documentType", defaultValue = "RESUME") DocumentType documentType
     ) {
         User currentUser = authService.getCurrentAuthenticatedUser();
         DocumentResponse response = documentService.uploadDocument(currentUser, applicationId, file, documentType);
@@ -40,6 +46,7 @@ public class DocumentController {
     }
 
     @GetMapping("/applications/{applicationId}/documents")
+    @Operation(summary = "List documents for application", description = "Returns metadata for all documents attached to an application.")
     public ResponseEntity<List<DocumentResponse>> getDocumentsByApplication(@PathVariable Long applicationId) {
         User currentUser = authService.getCurrentAuthenticatedUser();
         List<DocumentResponse> documents = documentService.getDocumentsByApplication(currentUser, applicationId);
@@ -47,6 +54,7 @@ public class DocumentController {
     }
 
     @GetMapping("/documents/{id}/download")
+    @Operation(summary = "Download document attachment", description = "Streams the binary file content with original filename and Content-Type.")
     public ResponseEntity<Resource> downloadDocument(@PathVariable Long id) {
         User currentUser = authService.getCurrentAuthenticatedUser();
         DocumentAttachment document = documentService.getDocumentEntity(currentUser, id);
@@ -66,6 +74,7 @@ public class DocumentController {
     }
 
     @DeleteMapping("/documents/{id}")
+    @Operation(summary = "Delete document", description = "Removes attachment record and deletes file from disk storage.")
     public ResponseEntity<Void> deleteDocument(@PathVariable Long id) {
         User currentUser = authService.getCurrentAuthenticatedUser();
         documentService.deleteDocument(currentUser, id);
