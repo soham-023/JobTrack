@@ -27,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 class JobTrackIntegrationTest {
+    
 
     @Autowired
     private MockMvc mockMvc;
@@ -37,6 +38,7 @@ class JobTrackIntegrationTest {
     @Test
     @DisplayName("Should allow public access to root dashboard")
     void testRootEndpointReturnsOk() throws Exception {
+        
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk());
     }
