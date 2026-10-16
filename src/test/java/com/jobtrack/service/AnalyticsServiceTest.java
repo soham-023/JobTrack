@@ -31,7 +31,6 @@ class AnalyticsServiceTest {
 
     @Mock
     private JobApplicationRepository jobApplicationRepository;
-    
 
     @Mock
     private InterviewRepository interviewRepository;
@@ -44,6 +43,7 @@ class AnalyticsServiceTest {
     @BeforeEach
     void setUp() {
         testUser = new User("tester@example.com", "pass", "Tester", Role.ROLE_USER);
+        
         
         testUser.setId(10L);
     }
@@ -63,6 +63,7 @@ class AnalyticsServiceTest {
         when(interviewRepository.countByJobApplicationUserId(10L)).thenReturn(2L);
         when(interviewRepository.countByJobApplicationUserIdAndScheduledAtAfterAndStatus(eq(10L), any(), any())).thenReturn(1L);
         when(interviewRepository.findByJobApplicationUserIdAndScheduledAtAfterOrderByScheduledAtAsc(eq(10L), any())).thenReturn(List.of());
+        
 
         DashboardStatsResponse stats = analyticsService.getDashboardStats(testUser);
 
