@@ -12,6 +12,7 @@ public class UpdateJobApplicationRequest {
 
     @NotBlank(message = "Company name is required")
     @Size(max = 150, message = "Company name must not exceed 150 characters")
+    
     private String companyName;
 
     @NotBlank(message = "Job title is required")
@@ -23,8 +24,10 @@ public class UpdateJobApplicationRequest {
 
     @Size(max = 150, message = "Location must not exceed 150 characters")
     private String location;
+    
 
     private EmploymentType employmentType;
+    
 
     private BigDecimal minSalary;
 
