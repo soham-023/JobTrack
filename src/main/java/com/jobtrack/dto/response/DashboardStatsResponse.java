@@ -8,9 +8,11 @@ import java.util.List;
 import java.util.Map;
 
 public class DashboardStatsResponse {
+    
 
     private long totalApplications;
     private long activeApplications;
+    
     private long totalInterviews;
     private long upcomingInterviewsCount;
     private double responseRatePercentage;
@@ -26,6 +28,7 @@ public class DashboardStatsResponse {
     }
 
     public void setTotalApplications(long totalApplications) {
+        
         this.totalApplications = totalApplications;
     }
 
@@ -34,6 +37,7 @@ public class DashboardStatsResponse {
     }
 
     public void setActiveApplications(long activeApplications) {
+        
         this.activeApplications = activeApplications;
     }
 
