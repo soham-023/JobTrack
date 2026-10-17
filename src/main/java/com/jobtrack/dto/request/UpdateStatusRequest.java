@@ -1,12 +1,14 @@
 package com.jobtrack.dto.request;
 
 import com.jobtrack.entity.enums.ApplicationStatus;
+
 import jakarta.validation.constraints.NotNull;
 
 public class UpdateStatusRequest {
 
     @NotNull(message = "Status cannot be null")
     private ApplicationStatus status;
+    
 
     private String optionalNote;
 
