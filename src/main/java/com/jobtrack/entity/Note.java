@@ -15,12 +15,14 @@ public class Note {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_application_id", nullable = false)
     private JobApplication jobApplication;
+    
 
     @Column(length = 150)
     private String title;
 
     @Column(nullable = false, length = 4000)
     private String content;
+    
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
