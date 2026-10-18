@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 
+
 @Entity
 @Table(name = "users")
 public class User implements UserDetails {
@@ -23,9 +24,11 @@ public class User implements UserDetails {
 
     @Column(nullable = false)
     private String password;
+    
 
     @Column(nullable = false, length = 100)
     private String fullName;
+    
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -36,6 +39,7 @@ public class User implements UserDetails {
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+    
 
     public User() {
     }
