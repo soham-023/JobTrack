@@ -20,6 +20,7 @@ public class JwtService {
 
     // Default 256-bit secret key for HMAC-SHA256, can be overridden via application.properties/env
     @Value("${application.security.jwt.secret-key:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}")
+    
     private String secretKey;
 
     @Value("${application.security.jwt.expiration:86400000}") // 24 hours in milliseconds
@@ -27,6 +28,7 @@ public class JwtService {
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
+        
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -36,6 +38,7 @@ public class JwtService {
 
     public String generateToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails);
+        
     }
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
