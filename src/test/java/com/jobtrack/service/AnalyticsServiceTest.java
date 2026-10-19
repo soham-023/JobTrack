@@ -3,7 +3,9 @@ package com.jobtrack.service;
 import com.jobtrack.dto.response.DashboardStatsResponse;
 import com.jobtrack.entity.User;
 import com.jobtrack.entity.enums.ApplicationStatus;
+
 import com.jobtrack.entity.enums.Role;
+
 import com.jobtrack.repository.InterviewRepository;
 import com.jobtrack.repository.JobApplicationRepository;
 import org.junit.jupiter.api.BeforeEach;
