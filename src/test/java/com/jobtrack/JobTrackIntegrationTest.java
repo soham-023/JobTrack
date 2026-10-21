@@ -33,9 +33,11 @@ class JobTrackIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+    
 
     @Autowired
     private ObjectMapper objectMapper;
+    
 
     @Test
     @DisplayName("Should allow public access to root dashboard")
