@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    
 
     public AuthController(AuthService authService) {
         this.authService = authService;
@@ -29,12 +30,14 @@ public class AuthController {
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         AuthResponse response = authService.register(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+        
     }
 
     @PostMapping("/login")
     @Operation(summary = "Authenticate user & obtain JWT token", description = "Validates user credentials and returns a JWT token along with user profile metadata.")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
+        
         return ResponseEntity.ok(response);
     }
 
