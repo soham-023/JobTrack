@@ -11,6 +11,8 @@ import java.util.Optional;
 public interface NoteRepository extends JpaRepository<Note, Long> {
 
     List<Note> findByJobApplicationIdAndJobApplicationUserIdOrderByCreatedAtDesc(Long applicationId, Long userId);
+    
 
     Optional<Note> findByIdAndJobApplicationUserId(Long id, Long userId);
+    
 }
