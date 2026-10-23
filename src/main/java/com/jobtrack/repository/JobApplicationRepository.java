@@ -17,6 +17,7 @@ import java.util.Optional;
 public interface JobApplicationRepository extends JpaRepository<JobApplication, Long> {
 
     Optional<JobApplication> findByIdAndUserId(Long id, Long userId);
+    
 
     @Query("SELECT j FROM JobApplication j WHERE j.user.id = :userId " +
            "AND (:status IS NULL OR j.status = :status) " +
@@ -36,6 +37,7 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
     long countByUserId(Long userId);
 
     long countByUserIdAndStatus(Long userId, ApplicationStatus status);
+    
 
     @Query("SELECT j.status, COUNT(j) FROM JobApplication j WHERE j.user.id = :userId GROUP BY j.status")
     List<Object[]> countByStatusForUser(@Param("userId") Long userId);
