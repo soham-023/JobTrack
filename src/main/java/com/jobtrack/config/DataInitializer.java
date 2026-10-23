@@ -7,6 +7,7 @@ import com.jobtrack.entity.User;
 import com.jobtrack.entity.enums.ApplicationStatus;
 import com.jobtrack.entity.enums.EmploymentType;
 import com.jobtrack.entity.enums.InterviewStatus;
+
 import com.jobtrack.entity.enums.InterviewType;
 import com.jobtrack.entity.enums.Role;
 import com.jobtrack.repository.InterviewRepository;
@@ -27,6 +28,7 @@ import java.time.LocalDateTime;
 public class DataInitializer implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
+    
 
     private final UserRepository userRepository;
     private final JobApplicationRepository jobApplicationRepository;
@@ -44,6 +46,7 @@ public class DataInitializer implements CommandLineRunner {
         this.interviewRepository = interviewRepository;
         this.passwordEncoder = passwordEncoder;
         this.interviewReminderService = interviewReminderService;
+        
     }
 
     @Override
@@ -53,6 +56,7 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         log.info("Seeding initial demo data for JobTrack...");
+        
 
         User demoUser = new User();
         demoUser.setEmail("demo@jobtrack.com");
