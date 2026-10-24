@@ -7,6 +7,7 @@ import com.jobtrack.entity.enums.ApplicationStatus;
 import com.jobtrack.entity.enums.EmploymentType;
 import com.jobtrack.entity.enums.InterviewType;
 import org.junit.jupiter.api.DisplayName;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -22,8 +23,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -35,6 +38,7 @@ class JobTrackIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+    
     
 
     @Autowired
@@ -54,6 +58,7 @@ class JobTrackIntegrationTest {
     void testRegisterAndLogin() throws Exception {
         RegisterRequest registerRequest = new RegisterRequest(
                 "john.doe@example.com",
+            
                 "secretPassword123",
                 "John Doe"
         );
