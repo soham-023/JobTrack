@@ -6,6 +6,7 @@ import com.jobtrack.dto.request.*;
 import com.jobtrack.entity.enums.ApplicationStatus;
 import com.jobtrack.entity.enums.EmploymentType;
 import com.jobtrack.entity.enums.InterviewType;
+
 import org.junit.jupiter.api.DisplayName;
 
 import org.junit.jupiter.api.Test;
@@ -19,13 +20,17 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
+
 import java.time.LocalDateTime;
 
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+
 
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
