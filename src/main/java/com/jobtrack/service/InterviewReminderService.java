@@ -26,14 +26,17 @@ import java.util.stream.Collectors;
 public class InterviewReminderService {
 
     private static final Logger log = LoggerFactory.getLogger(InterviewReminderService.class);
+    
 
     private final InterviewRepository interviewRepository;
     private final NotificationRepository notificationRepository;
+    
 
     @Value("${application.reminders.lookahead-hours:24}")
     private int lookaheadHours;
 
     public InterviewReminderService(InterviewRepository interviewRepository,
+                                    
                                   NotificationRepository notificationRepository) {
         this.interviewRepository = interviewRepository;
         this.notificationRepository = notificationRepository;
@@ -44,6 +47,7 @@ public class InterviewReminderService {
      * Scans for any interviews happening in the next 24 hours that haven't had a reminder sent.
      */
     @Scheduled(cron = "${application.reminders.cron:0 0 * * * *}")
+    
     @Transactional
     public int checkAndSendReminders() {
         LocalDateTime now = LocalDateTime.now();
