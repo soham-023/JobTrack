@@ -49,6 +49,7 @@ public class NotificationController {
     public ResponseEntity<Void> markAsRead(@PathVariable Long id) {
         User currentUser = authService.getCurrentAuthenticatedUser();
         reminderService.markAsRead(currentUser, id);
+        
         return ResponseEntity.noContent().build();
     }
 
@@ -56,14 +57,18 @@ public class NotificationController {
     @Operation(summary = "Mark all notifications as read", description = "Marks all unread notifications for the user as read.")
     public ResponseEntity<Void> markAllAsRead() {
         User currentUser = authService.getCurrentAuthenticatedUser();
+        
         reminderService.markAllAsRead(currentUser);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/check-now")
+    
     @Operation(summary = "Trigger reminder scan on demand", description = "Executes the background 24-hour lookahead reminder check immediately.")
     public ResponseEntity<Map<String, Object>> triggerManualCheck() {
+        
         int count = reminderService.checkAndSendReminders();
+        
         return ResponseEntity.ok(Map.of(
                 "message", "Reminder check executed successfully",
                 "remindersCreated", count
