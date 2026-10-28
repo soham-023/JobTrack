@@ -69,13 +69,18 @@ public class JobApplicationController {
     }
 
     @GetMapping(value = "/export", produces = "text/csv; charset=UTF-8")
+    
     @Operation(summary = "Export applications as RFC 4180 CSV", description = "Generates a downloadable CSV spreadsheet with UTF-8 BOM, optionally filtered by status.")
     public ResponseEntity<byte[]> exportApplications(
+        
             @RequestParam(required = false) ApplicationStatus status
+        
     ) {
         User currentUser = authService.getCurrentAuthenticatedUser();
         byte[] csvData = jobApplicationService.exportApplicationsCsv(currentUser, status);
+        
         String filename = "job_applications_" + LocalDate.now() + ".csv";
+        
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
@@ -87,6 +92,7 @@ public class JobApplicationController {
     @Operation(summary = "Get application details by ID", description = "Returns full application record with attached interviews and notes.")
     public ResponseEntity<JobApplicationResponse> getApplicationById(@PathVariable Long id) {
         User currentUser = authService.getCurrentAuthenticatedUser();
+        
         JobApplicationResponse response = jobApplicationService.getApplicationById(currentUser, id);
         return ResponseEntity.ok(response);
     }
@@ -108,7 +114,8 @@ public class JobApplicationController {
             @PathVariable Long id,
             @Valid @RequestBody UpdateStatusRequest request
     ) {
-        User currentUser = authService.getCurrentAuthenticatedUser();
+        User currentUser = authService.getCurrentAuthenticatedUser(); 
+        
         JobApplicationResponse response = jobApplicationService.updateStatus(currentUser, id, request);
         return ResponseEntity.ok(response);
     }
@@ -117,6 +124,7 @@ public class JobApplicationController {
     @Operation(summary = "Delete job application", description = "Permanently deletes an application and all associated rounds, notes, and documents.")
     public ResponseEntity<Void> deleteApplication(@PathVariable Long id) {
         User currentUser = authService.getCurrentAuthenticatedUser();
+        
         jobApplicationService.deleteApplication(currentUser, id);
         return ResponseEntity.noContent().build();
     }
