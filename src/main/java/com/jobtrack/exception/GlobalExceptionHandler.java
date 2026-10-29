@@ -104,7 +104,9 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
+            
                 "Validation failed for request body",
+            
                 request.getRequestURI(),
                 errors
         );
@@ -115,7 +117,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, HttpServletRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
+            
                 HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+            
                 ex.getMessage() != null ? ex.getMessage() : "An unexpected server error occurred",
                 request.getRequestURI()
         );
