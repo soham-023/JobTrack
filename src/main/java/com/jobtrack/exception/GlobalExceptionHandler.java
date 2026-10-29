@@ -24,6 +24,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.NOT_FOUND.value(),
                 HttpStatus.NOT_FOUND.getReasonPhrase(),
             
+            
                 ex.getMessage(),
                 request.getRequestURI()
         );
@@ -41,6 +42,7 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+        
     }
 
     @ExceptionHandler(UnauthorizedException.class)
@@ -48,6 +50,7 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.UNAUTHORIZED.value(),
                 HttpStatus.UNAUTHORIZED.getReasonPhrase(),
+            
                 ex.getMessage(),
                 request.getRequestURI()
         );
@@ -59,6 +62,7 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
+            
                 ex.getMessage(),
                 request.getRequestURI()
         );
@@ -69,6 +73,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException ex, HttpServletRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.UNAUTHORIZED.value(),
+            
                 HttpStatus.UNAUTHORIZED.getReasonPhrase(),
                 "Invalid email or password",
                 request.getRequestURI()
@@ -89,9 +94,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        
         Map<String, String> errors = new HashMap<>();
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
             errors.put(error.getField(), error.getDefaultMessage());
+            
         }
 
         ErrorResponse errorResponse = new ErrorResponse(
