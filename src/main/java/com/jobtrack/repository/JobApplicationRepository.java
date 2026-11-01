@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+
 @Repository
 public interface JobApplicationRepository extends JpaRepository<JobApplication, Long> {
 
@@ -20,6 +21,7 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
     
 
     @Query("SELECT j FROM JobApplication j WHERE j.user.id = :userId " +
+           
            "AND (:status IS NULL OR j.status = :status) " +
            "AND (:employmentType IS NULL OR j.employmentType = :employmentType) " +
            "AND (:search IS NULL OR :search = '' OR " +
@@ -30,6 +32,7 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
             @Param("userId") Long userId,
             @Param("status") ApplicationStatus status,
             @Param("employmentType") EmploymentType employmentType,
+        
             @Param("search") String search,
             Pageable pageable
     );
@@ -41,9 +44,11 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
 
     @Query("SELECT j.status, COUNT(j) FROM JobApplication j WHERE j.user.id = :userId GROUP BY j.status")
     List<Object[]> countByStatusForUser(@Param("userId") Long userId);
+    
 
     @Query("SELECT j FROM JobApplication j WHERE j.user.id = :userId " +
            "AND (:status IS NULL OR j.status = :status) " +
+           
            "ORDER BY j.appliedDate DESC, j.createdAt DESC")
     List<JobApplication> findAllForExport(@Param("userId") Long userId, @Param("status") ApplicationStatus status);
 }
