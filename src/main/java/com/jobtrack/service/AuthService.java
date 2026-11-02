@@ -18,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 @Service
 public class AuthService {
 
@@ -38,6 +39,7 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
+        
         if (userRepository.existsByEmail(request.getEmail().toLowerCase().trim())) {
             throw new DuplicateResourceException("User with email '" + request.getEmail() + "' already exists");
         }
@@ -45,6 +47,7 @@ public class AuthService {
         User user = new User(
                 request.getEmail().toLowerCase().trim(),
                 passwordEncoder.encode(request.getPassword()),
+            
                 request.getFullName().trim(),
                 Role.ROLE_USER
         );
@@ -58,6 +61,7 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
+                    
                         request.getEmail().toLowerCase().trim(),
                         request.getPassword()
                 )
@@ -68,10 +72,12 @@ public class AuthService {
 
         String jwtToken = jwtService.generateToken(user);
         return new AuthResponse(jwtToken, UserResponse.fromEntity(user));
+        
     }
 
     public User getCurrentAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
             throw new UnauthorizedException("User is not authenticated");
         }
