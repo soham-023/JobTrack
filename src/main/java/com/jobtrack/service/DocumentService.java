@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,12 +24,14 @@ public class DocumentService {
     private final DocumentAttachmentRepository documentAttachmentRepository;
     private final JobApplicationService jobApplicationService;
     private final FileStorageService fileStorageService;
+    
 
     public DocumentService(DocumentAttachmentRepository documentAttachmentRepository,
                            JobApplicationService jobApplicationService,
                            FileStorageService fileStorageService) {
         this.documentAttachmentRepository = documentAttachmentRepository;
         this.jobApplicationService = jobApplicationService;
+        
         this.fileStorageService = fileStorageService;
     }
 
@@ -37,6 +40,7 @@ public class DocumentService {
         JobApplication application = jobApplicationService.findApplicationOrThrow(applicationId, user.getId());
 
         String storedFileName = fileStorageService.storeFile(file);
+        
         String originalFileName = StringUtils.cleanPath(file.getOriginalFilename() != null ? file.getOriginalFilename() : "document");
 
         DocumentAttachment attachment = new DocumentAttachment(
@@ -44,6 +48,7 @@ public class DocumentService {
                 originalFileName,
                 storedFileName,
                 file.getContentType(),
+            
                 file.getSize(),
                 documentType != null ? documentType : DocumentType.RESUME
         );
@@ -55,6 +60,7 @@ public class DocumentService {
                 "Uploaded file: " + originalFileName + " (" + DocumentResponse.fromEntity(attachment).getFormattedFileSize() + ")"
         );
         application.addNote(auditNote);
+        
 
         DocumentAttachment saved = documentAttachmentRepository.save(attachment);
         return DocumentResponse.fromEntity(saved);
@@ -67,6 +73,7 @@ public class DocumentService {
         return documentAttachmentRepository.findByJobApplicationIdAndJobApplicationUserIdOrderByUploadedAtDesc(applicationId, user.getId())
                 .stream()
                 .map(DocumentResponse::fromEntity)
+            
                 .collect(Collectors.toList());
     }
 
