@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jobtrack.dto.request.*;
 import com.jobtrack.entity.enums.ApplicationStatus;
+
 import com.jobtrack.entity.enums.EmploymentType;
 import com.jobtrack.entity.enums.InterviewType;
 
@@ -40,18 +41,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class JobTrackIntegrationTest {
     
+    
 
     @Autowired
     private MockMvc mockMvc;
     
-    
-
     @Autowired
     private ObjectMapper objectMapper;
     
 
     @Test
     @DisplayName("Should allow public access to root dashboard")
+    
     void testRootEndpointReturnsOk() throws Exception {
         
         mockMvc.perform(get("/"))
