@@ -127,8 +127,10 @@ class JobTrackIntegrationTest {
         appReq.setJobTitle("Backend Software Engineer");
         appReq.setLocation("New York, NY");
         appReq.setEmploymentType(EmploymentType.FULL_TIME);
+        
         appReq.setMinSalary(BigDecimal.valueOf(140000));
         appReq.setMaxSalary(BigDecimal.valueOf(160000));
+        
         appReq.setStatus(ApplicationStatus.APPLIED);
         appReq.setAppliedDate(LocalDate.now());
         appReq.setInitialNotes("Found via company careers page.");
@@ -139,12 +141,14 @@ class JobTrackIntegrationTest {
                         .content(objectMapper.writeValueAsString(appReq)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.companyName").value("Acme Corp"))
+            
                 .andExpect(jsonPath("$.jobTitle").value("Backend Software Engineer"))
                 .andExpect(jsonPath("$.status").value("APPLIED"))
                 .andExpect(jsonPath("$.notes.length()").value(1))
                 .andReturn();
 
         JsonNode createNode = objectMapper.readTree(createResult.getResponse().getContentAsString());
+        
         long applicationId = createNode.get("id").asLong();
 
         // 3. Update Status via PATCH
@@ -153,6 +157,7 @@ class JobTrackIntegrationTest {
                         .header("Authorization", token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(statusReq)))
+            
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SCREENING"))
                 .andExpect(jsonPath("$.notes.length()").value(2));
