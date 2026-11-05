@@ -167,6 +167,7 @@ class JobTrackIntegrationTest {
         interviewReq.setRoundName("Round 1 - Technical Coding");
         interviewReq.setInterviewType(InterviewType.TECHNICAL);
         interviewReq.setScheduledAt(LocalDateTime.now().plusDays(3));
+        
         interviewReq.setInterviewerName("Bob Tech");
         interviewReq.setInterviewerEmail("bob@acme.com");
         interviewReq.setLocationOrLink("https://zoom.us/j/987654321");
@@ -189,6 +190,7 @@ class JobTrackIntegrationTest {
         // 5. Add Note
         CreateNoteRequest noteReq = new CreateNoteRequest("Prep Notes", "Review Spring Security, Concurrency, and JPA caching.");
         mockMvc.perform(post("/api/v1/applications/" + applicationId + "/notes")
+                        
                         .header("Authorization", token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(noteReq)))
@@ -217,6 +219,7 @@ class JobTrackIntegrationTest {
 
     @Test
     @DisplayName("Should successfully upload, list, download, and delete a document attachment")
+    
     void testDocumentAttachmentLifecycle() throws Exception {
         RegisterRequest registerReq = new RegisterRequest("doc.user@example.com", "password123", "Doc User");
         MvcResult regResult = mockMvc.perform(post("/api/v1/auth/register")
@@ -229,6 +232,7 @@ class JobTrackIntegrationTest {
 
         // Create Application
         CreateJobApplicationRequest appReq = new CreateJobApplicationRequest();
+        
         appReq.setCompanyName("GitHub");
         appReq.setJobTitle("Platform Engineer");
         MvcResult appResult = mockMvc.perform(post("/api/v1/applications")
@@ -242,6 +246,7 @@ class JobTrackIntegrationTest {
 
         // 1. Upload Document (PDF)
         byte[] pdfContent = "%PDF-1.4 Mock resume content for testing".getBytes();
+        
         MockMultipartFile file = new MockMultipartFile(
                 "file",
                 "Senior_Resume.pdf",
@@ -260,6 +265,7 @@ class JobTrackIntegrationTest {
                 .andReturn();
 
         long docId = objectMapper.readTree(uploadResult.getResponse().getContentAsString()).get("id").asLong();
+        
 
         // 2. List Documents for Application
         mockMvc.perform(get("/api/v1/applications/" + appId + "/documents")
