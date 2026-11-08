@@ -3,6 +3,8 @@ package com.jobtrack.dto.request;
 import com.jobtrack.entity.enums.ApplicationStatus;
 import com.jobtrack.entity.enums.EmploymentType;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
@@ -26,10 +28,13 @@ public class CreateJobApplicationRequest {
 
     private EmploymentType employmentType = EmploymentType.FULL_TIME;
 
+    @PositiveOrZero(message = "Minimum salary must not be negative")
     private BigDecimal minSalary;
 
+    @PositiveOrZero(message = "Maximum salary must not be negative")
     private BigDecimal maxSalary;
 
+    @Pattern(regexp = "^[A-Za-z]{3}$", message = "Salary currency must be a 3-letter ISO 4217 code")
     private String salaryCurrency = "USD";
 
     private ApplicationStatus status = ApplicationStatus.APPLIED;

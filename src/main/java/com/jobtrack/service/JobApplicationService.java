@@ -10,6 +10,7 @@ import com.jobtrack.entity.Note;
 import com.jobtrack.entity.User;
 import com.jobtrack.entity.enums.ApplicationStatus;
 import com.jobtrack.entity.enums.EmploymentType;
+import com.jobtrack.exception.BadRequestException;
 import com.jobtrack.exception.ResourceNotFoundException;
 import com.jobtrack.repository.JobApplicationRepository;
 import org.springframework.data.domain.Page;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Service
@@ -33,6 +35,7 @@ public class JobApplicationService {
 
     @Transactional
     public JobApplicationResponse createApplication(User user, CreateJobApplicationRequest request) {
+        validateSalaryRange(request.getMinSalary(), request.getMaxSalary());
         JobApplication application = new JobApplication();
         application.setUser(user);
         application.setCompanyName(request.getCompanyName().trim());
@@ -84,6 +87,7 @@ public class JobApplicationService {
 
     @Transactional
     public JobApplicationResponse updateApplication(User user, Long applicationId, UpdateJobApplicationRequest request) {
+        validateSalaryRange(request.getMinSalary(), request.getMaxSalary());
         JobApplication application = findApplicationOrThrow(applicationId, user.getId());
 
         application.setCompanyName(request.getCompanyName().trim());
@@ -144,5 +148,17 @@ public class JobApplicationService {
     public JobApplication findApplicationOrThrow(Long applicationId, Long userId) {
         return jobApplicationRepository.findByIdAndUserId(applicationId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Job application not found with ID: " + applicationId));
+    }
+
+    /**
+     * Ensures that, when both bounds are supplied, the minimum salary does not exceed the maximum.
+     *
+     * @throws BadRequestException if {@code minSalary} is greater than {@code maxSalary}
+     */
+    static void validateSalaryRange(BigDecimal minSalary, BigDecimal maxSalary) {
+        if (minSalary != null && maxSalary != null && minSalary.compareTo(maxSalary) > 0) {
+            throw new BadRequestException("Minimum salary (" + minSalary.toPlainString()
+                    + ") must not be greater than maximum salary (" + maxSalary.toPlainString() + ")");
+        }
     }
 }
