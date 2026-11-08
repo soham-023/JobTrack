@@ -103,11 +103,13 @@ src/main/java/com/jobtrack/
 ### 2. Run the Application
 You can run the application directly using the helper script:
 ```bash
-./run.sh
+./run.sh              # first run downloads dependencies
+./run.sh --offline    # later runs, once dependencies are cached
+./run.sh --help       # show all options
 ```
 Or via Maven:
 ```bash
-mvn spring-boot:run -o
+mvn spring-boot:run
 ```
 
 The application starts on `http://localhost:8080`.
@@ -124,8 +126,59 @@ For testing out-of-the-box, the following demo account is pre-loaded:
 
 Run the full integration and unit test suite:
 ```bash
-mvn test -o
+mvn test
 ```
+
+Run a single test class:
+```bash
+mvn test -Dtest=JobApplicationServiceTest
+```
+
+### Continuous Integration
+Every push and pull request to `main` runs `mvn -B verify` on JDK 17 via GitHub Actions (`.github/workflows/ci.yml`). Surefire reports are uploaded as a build artifact when a run fails.
+
+---
+
+## ✅ Validation Rules & Error Responses
+
+Request bodies are validated before reaching the service layer. Invalid input returns `400 Bad Request` with a structured JSON body:
+
+| Field | Rule |
+|---|---|
+| `companyName`, `jobTitle` | Required, max 150 characters |
+| `jobUrl` | Max 500 characters |
+| `location` | Max 150 characters |
+| `minSalary`, `maxSalary` | Must not be negative; `minSalary` must not exceed `maxSalary` |
+| `salaryCurrency` | 3-letter ISO 4217 code (e.g. `USD`, `INR`, `EUR`); defaults to `USD` |
+| `email` (register) | Required, valid email address |
+| `password` (register) | 6–100 characters |
+
+Error status codes used across the API:
+
+| Status | When |
+|---|---|
+| `400` | Validation failure or invalid business input |
+| `401` | Missing/invalid JWT or wrong login credentials |
+| `403` | Authenticated but not permitted to perform the action |
+| `404` | Resource not found, or owned by another user |
+| `409` | Duplicate resource (e.g. email already registered) |
+
+---
+
+## ⚙️ Configuration
+
+Key settings live in `src/main/resources/application.properties` and can be overridden with environment variables or `-D` flags:
+
+| Property | Default | Purpose |
+|---|---|---|
+| `server.port` | `8080` | HTTP port |
+| `application.security.jwt.expiration` | `86400000` | JWT lifetime in ms (24 h) |
+| `application.storage.upload-dir` | `uploads` | Where uploaded documents are stored |
+| `spring.servlet.multipart.max-file-size` | `15MB` | Max upload size |
+| `application.reminders.cron` | `0 0 * * * *` | Interview reminder scan schedule (hourly) |
+| `application.reminders.lookahead-hours` | `24` | How far ahead reminders look |
+
+> ⚠️ The bundled JWT secret is for local development only. Override `application.security.jwt.secret-key` (e.g. `APPLICATION_SECURITY_JWT_SECRET_KEY` env var) before deploying anywhere public.
 
 ---
 
