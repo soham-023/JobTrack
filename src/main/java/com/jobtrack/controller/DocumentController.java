@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -18,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
@@ -69,7 +71,7 @@ public class DocumentController {
 
         return ResponseEntity.ok()
                 .contentType(mediaType)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + document.getOriginalFileName() + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, attachmentHeader(document.getOriginalFileName()))
                 .body(resource);
     }
 
@@ -79,5 +81,18 @@ public class DocumentController {
         User currentUser = authService.getCurrentAuthenticatedUser();
         documentService.deleteDocument(currentUser, id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Builds a Content-Disposition header that is safe for any user-supplied
+     * filename: quotes and control characters are escaped and non-ASCII names
+     * are encoded per RFC 5987 ({@code filename*=UTF-8''...}).
+     */
+    static String attachmentHeader(String originalFileName) {
+        String filename = originalFileName != null && !originalFileName.isBlank() ? originalFileName : "document";
+        return ContentDisposition.attachment()
+                .filename(filename, StandardCharsets.UTF_8)
+                .build()
+                .toString();
     }
 }
