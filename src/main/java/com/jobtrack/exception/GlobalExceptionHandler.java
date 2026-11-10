@@ -2,6 +2,8 @@ package com.jobtrack.exception;
 
 import com.jobtrack.dto.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -17,6 +19,8 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ResourceNotFoundException.class)
 
@@ -118,12 +122,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, HttpServletRequest request) {
+        // Log the full exception server-side, but never echo internal details
+        // (SQL, stack traces, class names) back to the client.
+        log.error("Unhandled exception on {} {}", request.getMethod(), request.getRequestURI(), ex);
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
-            
                 HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-            
-                ex.getMessage() != null ? ex.getMessage() : "An unexpected server error occurred",
+                "An unexpected server error occurred",
                 request.getRequestURI()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
