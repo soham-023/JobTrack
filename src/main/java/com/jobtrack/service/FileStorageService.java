@@ -3,6 +3,8 @@ package com.jobtrack.service;
 import com.jobtrack.exception.BadRequestException;
 import com.jobtrack.exception.ResourceNotFoundException;
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -22,6 +24,8 @@ import java.util.UUID;
 
 @Service
 public class FileStorageService {
+
+    private static final Logger log = LoggerFactory.getLogger(FileStorageService.class);
 
     @Value("${application.storage.upload-dir:uploads}")
     private String uploadDir;
@@ -94,7 +98,9 @@ public class FileStorageService {
             Path filePath = resolveInsideStorage(storedFileName);
             Files.deleteIfExists(filePath);
         } catch (IOException ex) {
-            // Log and ignore to prevent blocking database record deletion
+            // Don't block deletion of the database record, but leave a trace so
+            // orphaned files on disk can be found and cleaned up later.
+            log.warn("Could not delete stored file '{}' from {}", storedFileName, storageLocation, ex);
         }
     }
 
