@@ -17,6 +17,8 @@ import java.util.stream.Collectors;
 @Service
 public class NoteService {
 
+    static final String DEFAULT_NOTE_TITLE = "General Note";
+
     private final NoteRepository noteRepository;
     private final JobApplicationService jobApplicationService;
 
@@ -31,7 +33,7 @@ public class NoteService {
 
         Note note = new Note();
         note.setJobApplication(application);
-        note.setTitle(request.getTitle() != null && !request.getTitle().trim().isEmpty() ? request.getTitle().trim() : "General Note");
+        note.setTitle(hasText(request.getTitle()) ? request.getTitle().trim() : DEFAULT_NOTE_TITLE);
         note.setContent(request.getContent().trim());
 
         Note saved = noteRepository.save(note);
@@ -52,7 +54,8 @@ public class NoteService {
     public NoteResponse updateNote(User user, Long noteId, UpdateNoteRequest request) {
         Note note = findNoteOrThrow(noteId, user.getId());
 
-        if (request.getTitle() != null) {
+        // A missing or blank title keeps the existing one rather than wiping it out.
+        if (hasText(request.getTitle())) {
             note.setTitle(request.getTitle().trim());
         }
         note.setContent(request.getContent().trim());
@@ -70,5 +73,9 @@ public class NoteService {
     public Note findNoteOrThrow(Long noteId, Long userId) {
         return noteRepository.findByIdAndJobApplicationUserId(noteId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Note not found with ID: " + noteId));
+    }
+
+    private static boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
     }
 }
