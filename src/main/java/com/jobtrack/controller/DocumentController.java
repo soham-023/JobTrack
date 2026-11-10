@@ -86,13 +86,20 @@ public class DocumentController {
     /**
      * Builds a Content-Disposition header that is safe for any user-supplied
      * filename: quotes and control characters are escaped and non-ASCII names
-     * are encoded per RFC 5987 ({@code filename*=UTF-8''...}).
+     * are encoded per RFC 5987/6266 ({@code filename*=UTF-8''...}).
      */
     static String attachmentHeader(String originalFileName) {
-        String filename = originalFileName != null && !originalFileName.isBlank() ? originalFileName : "document";
-        return ContentDisposition.attachment()
-                .filename(filename, StandardCharsets.UTF_8)
-                .build()
-                .toString();
+        String filename = originalFileName != null ? originalFileName.replaceAll("\\p{Cntrl}", "") : "";
+        if (filename.isBlank()) {
+            filename = "document";
+        }
+        ContentDisposition.Builder builder = ContentDisposition.attachment();
+        if (StandardCharsets.US_ASCII.newEncoder().canEncode(filename)) {
+            // Plain ASCII: a simple quoted filename (quotes/backslashes are escaped by Spring).
+            builder.filename(filename);
+        } else {
+            builder.filename(filename, StandardCharsets.UTF_8);
+        }
+        return builder.build().toString();
     }
 }

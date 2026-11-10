@@ -8,9 +8,8 @@ class DocumentControllerTest {
 
     @Test
     void plainFilenameIsQuoted() {
-        assertThat(DocumentController.attachmentHeader("resume.pdf"))
-                .startsWith("attachment;")
-                .contains("resume.pdf");
+        assertThat(DocumentController.attachmentHeader("Senior_Resume.pdf"))
+                .isEqualTo("attachment; filename=\"Senior_Resume.pdf\"");
     }
 
     @Test
