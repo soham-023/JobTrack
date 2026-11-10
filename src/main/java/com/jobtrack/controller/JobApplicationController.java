@@ -8,6 +8,7 @@ import com.jobtrack.dto.response.PagedResponse;
 import com.jobtrack.entity.User;
 import com.jobtrack.entity.enums.ApplicationStatus;
 import com.jobtrack.entity.enums.EmploymentType;
+import com.jobtrack.exception.BadRequestException;
 import com.jobtrack.service.AuthService;
 import com.jobtrack.service.JobApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,11 +24,22 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.Set;
+import java.util.TreeSet;
 
 @RestController
 @RequestMapping("/api/v1/applications")
 @Tag(name = "2. Job Applications", description = "CRUD operations, lifecycle tracking, filtering, and RFC 4180 CSV export")
 public class JobApplicationController {
+
+    /** Largest page a client may request, to keep list queries bounded. */
+    static final int MAX_PAGE_SIZE = 100;
+
+    /** Entity properties that list results may be sorted by. */
+    static final Set<String> SORTABLE_FIELDS = Set.of(
+            "createdAt", "updatedAt", "appliedDate", "deadline", "companyName",
+            "jobTitle", "location", "status", "employmentType", "minSalary", "maxSalary"
+    );
 
     private final JobApplicationService jobApplicationService;
     private final AuthService authService;
@@ -59,8 +71,7 @@ public class JobApplicationController {
             @RequestParam(defaultValue = "desc") String sortDir
     ) {
         User currentUser = authService.getCurrentAuthenticatedUser();
-        Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = buildPageable(page, size, sortBy, sortDir);
 
         PagedResponse<JobApplicationResponse> response = jobApplicationService.getApplications(
                 currentUser, status, employmentType, search, pageable
@@ -127,5 +138,31 @@ public class JobApplicationController {
         
         jobApplicationService.deleteApplication(currentUser, id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Validates paging and sorting parameters and turns them into a {@link Pageable}.
+     * Invalid input is reported as 400 Bad Request instead of surfacing as a
+     * server error from Spring Data (e.g. an unknown sort property).
+     */
+    static Pageable buildPageable(int page, int size, String sortBy, String sortDir) {
+        if (page < 0) {
+            throw new BadRequestException("Page index must not be negative");
+        }
+        if (size < 1 || size > MAX_PAGE_SIZE) {
+            throw new BadRequestException("Page size must be between 1 and " + MAX_PAGE_SIZE);
+        }
+        if (!SORTABLE_FIELDS.contains(sortBy)) {
+            throw new BadRequestException("Cannot sort by '" + sortBy + "'. Allowed fields: " + new TreeSet<>(SORTABLE_FIELDS));
+        }
+        Sort.Direction direction;
+        if ("asc".equalsIgnoreCase(sortDir)) {
+            direction = Sort.Direction.ASC;
+        } else if ("desc".equalsIgnoreCase(sortDir)) {
+            direction = Sort.Direction.DESC;
+        } else {
+            throw new BadRequestException("Sort direction must be 'asc' or 'desc'");
+        }
+        return PageRequest.of(page, size, Sort.by(direction, sortBy));
     }
 }
