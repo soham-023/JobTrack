@@ -156,22 +156,34 @@ Request bodies are validated before reaching the service layer. Invalid input re
 | Field | Rule |
 |---|---|
 | `companyName`, `jobTitle` | Required, max 150 characters |
-| `jobUrl` | Max 500 characters |
+| `jobUrl` | Optional `http://` or `https://` link, max 500 characters; a blank value is stored as no URL |
 | `location` | Max 150 characters |
 | `minSalary`, `maxSalary` | Must not be negative; `minSalary` must not exceed `maxSalary` |
 | `salaryCurrency` | 3-letter ISO 4217 code (e.g. `USD`, `INR`, `EUR`); defaults to `USD` |
+| `appliedDate` | Must not be in the future; defaults to today |
 | `email` (register) | Required, valid email address |
 | `password` (register) | 6–100 characters |
+
+List endpoints (`GET /api/v1/applications`) also validate their query parameters:
+
+| Parameter | Rule |
+|---|---|
+| `page` | `0` or greater |
+| `size` | 1–100 |
+| `sortBy` | One of `createdAt`, `updatedAt`, `appliedDate`, `deadline`, `companyName`, `jobTitle`, `location`, `status`, `employmentType`, `minSalary`, `maxSalary` |
+| `sortDir` | `asc` or `desc` |
 
 Error status codes used across the API:
 
 | Status | When |
 |---|---|
-| `400` | Validation failure or invalid business input |
+| `400` | Validation failure, invalid business input, malformed JSON, or a bad/missing query parameter |
 | `401` | Missing/invalid JWT or wrong login credentials |
 | `403` | Authenticated but not permitted to perform the action |
 | `404` | Resource not found, or owned by another user |
 | `409` | Duplicate resource (e.g. email already registered) |
+| `413` | Uploaded file larger than the 15 MB limit |
+| `500` | Unexpected server error (details are logged server-side, never returned to the client) |
 
 ---
 
