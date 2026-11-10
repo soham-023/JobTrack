@@ -77,7 +77,7 @@ public class FileStorageService {
 
     public Resource loadFileAsResource(String storedFileName) {
         try {
-            Path filePath = this.storageLocation.resolve(storedFileName).normalize();
+            Path filePath = resolveInsideStorage(storedFileName);
             Resource resource = new UrlResource(filePath.toUri());
             if (resource.exists() && resource.isReadable()) {
                 return resource;
@@ -91,11 +91,26 @@ public class FileStorageService {
 
     public void deleteFile(String storedFileName) {
         try {
-            Path filePath = this.storageLocation.resolve(storedFileName).normalize();
+            Path filePath = resolveInsideStorage(storedFileName);
             Files.deleteIfExists(filePath);
         } catch (IOException ex) {
             // Log and ignore to prevent blocking database record deletion
         }
+    }
+
+    /**
+     * Resolves a stored file name against the upload directory and refuses any
+     * name (e.g. {@code ../../etc/passwd}) that would point outside of it.
+     */
+    private Path resolveInsideStorage(String storedFileName) {
+        if (!StringUtils.hasText(storedFileName)) {
+            throw new ResourceNotFoundException("File not found: " + storedFileName);
+        }
+        Path filePath = this.storageLocation.resolve(storedFileName).normalize();
+        if (!filePath.startsWith(this.storageLocation)) {
+            throw new BadRequestException("Invalid stored file path: " + storedFileName);
+        }
+        return filePath;
     }
 
     private String getFileExtension(String fileName) {
