@@ -1,0 +1,10 @@
+# Keep the Docker build context small and free of local state
+target/
+uploads/
+.git/
+.github/
+.idea/
+.vscode/
+*.iml
+*.log
+.DS_Store

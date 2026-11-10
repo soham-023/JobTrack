@@ -114,6 +114,16 @@ mvn spring-boot:run
 
 The application starts on `http://localhost:8080`.
 
+Or with Docker (no local Java/Maven needed):
+```bash
+docker build -t jobtrack .
+docker run -p 8080:8080 \
+  -e APPLICATION_SECURITY_JWT_SECRET_KEY=<your-256-bit-hex-secret> \
+  -v jobtrack-uploads:/app/uploads \
+  jobtrack
+```
+The image runs as a non-root user and stores uploaded documents in the `/app/uploads` volume.
+
 ### 3. Pre-seeded Demo Account
 For testing out-of-the-box, the following demo account is pre-loaded:
 - **Email**: `demo@jobtrack.com`
