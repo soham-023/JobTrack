@@ -22,6 +22,7 @@ public class UpdateJobApplicationRequest {
     private String jobTitle;
 
     @Size(max = 500, message = "Job URL must not exceed 500 characters")
+    @Pattern(regexp = "^\\s*$|^(?i)https?://\\S+$", message = "Job URL must be an http:// or https:// link")
     private String jobUrl;
 
     @Size(max = 150, message = "Location must not exceed 150 characters")

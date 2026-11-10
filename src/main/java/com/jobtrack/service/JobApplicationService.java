@@ -40,7 +40,7 @@ public class JobApplicationService {
         application.setUser(user);
         application.setCompanyName(request.getCompanyName().trim());
         application.setJobTitle(request.getJobTitle().trim());
-        application.setJobUrl(request.getJobUrl());
+        application.setJobUrl(blankToNull(request.getJobUrl()));
         application.setLocation(request.getLocation());
         application.setEmploymentType(request.getEmploymentType() != null ? request.getEmploymentType() : EmploymentType.FULL_TIME);
         application.setMinSalary(request.getMinSalary());
@@ -92,7 +92,7 @@ public class JobApplicationService {
 
         application.setCompanyName(request.getCompanyName().trim());
         application.setJobTitle(request.getJobTitle().trim());
-        application.setJobUrl(request.getJobUrl());
+        application.setJobUrl(blankToNull(request.getJobUrl()));
         application.setLocation(request.getLocation());
         if (request.getEmploymentType() != null) {
             application.setEmploymentType(request.getEmploymentType());
@@ -160,5 +160,17 @@ public class JobApplicationService {
             throw new BadRequestException("Minimum salary (" + minSalary.toPlainString()
                     + ") must not be greater than maximum salary (" + maxSalary.toPlainString() + ")");
         }
+    }
+
+    /**
+     * Trims optional free-text input and stores blank values as {@code null}, so an
+     * empty form field does not end up as an empty string in the database.
+     */
+    static String blankToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }
