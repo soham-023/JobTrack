@@ -15,11 +15,22 @@ import com.jobtrack.repository.JobApplicationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class InterviewService {
+
+    /**
+     * Application statuses that are automatically promoted to
+     * {@link ApplicationStatus#INTERVIEWING} when an interview round is added.
+     * Later stages (OFFER, REJECTED, ...) are left untouched.
+     */
+    static final Set<ApplicationStatus> AUTO_PROMOTE_TO_INTERVIEWING = EnumSet.of(
+            ApplicationStatus.WISHLIST, ApplicationStatus.APPLIED, ApplicationStatus.SCREENING
+    );
 
     private final InterviewRepository interviewRepository;
     private final JobApplicationService jobApplicationService;
@@ -49,10 +60,7 @@ public class InterviewService {
         interview.setFeedback(request.getFeedback());
         interview.setNotes(request.getNotes());
 
-        // Smart workflow: when an interview is added and the application is still APPLIED or SCREENING or WISHLIST, update to INTERVIEWING
-        if (application.getStatus() == ApplicationStatus.APPLIED ||
-            application.getStatus() == ApplicationStatus.SCREENING ||
-            application.getStatus() == ApplicationStatus.WISHLIST) {
+        if (AUTO_PROMOTE_TO_INTERVIEWING.contains(application.getStatus())) {
             application.setStatus(ApplicationStatus.INTERVIEWING);
             jobApplicationRepository.save(application);
         }
