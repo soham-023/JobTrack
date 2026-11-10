@@ -10,6 +10,7 @@ import org.springframework.mock.http.MockHttpInputMessage;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -63,6 +64,15 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody().getMessage()).contains("'type'");
+    }
+
+    @Test
+    void oversizedUploadIsPayloadTooLarge() {
+        ResponseEntity<ErrorResponse> response = handler.handleMaxUploadSize(
+                new MaxUploadSizeExceededException(15L * 1024 * 1024), request());
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
+        assertThat(response.getBody().getStatus()).isEqualTo(413);
     }
 
     @SuppressWarnings("unused")
