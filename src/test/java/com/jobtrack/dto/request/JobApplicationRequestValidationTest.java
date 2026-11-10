@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.time.LocalDate;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -69,5 +70,28 @@ class JobApplicationRequestValidationTest {
         request.setJobUrl("javascript:alert(1)");
 
         assertThat(invalidFields(validator.validate(request))).containsExactly("jobUrl");
+    }
+
+    @Test
+    void appliedDateTodayOrEarlierIsValid() {
+        CreateJobApplicationRequest request = validCreateRequest();
+        request.setAppliedDate(LocalDate.now());
+        assertThat(validator.validate(request)).isEmpty();
+
+        request.setAppliedDate(LocalDate.now().minusMonths(2));
+        assertThat(validator.validate(request)).isEmpty();
+    }
+
+    @Test
+    void appliedDateInFutureIsRejected() {
+        CreateJobApplicationRequest create = validCreateRequest();
+        create.setAppliedDate(LocalDate.now().plusDays(3));
+        assertThat(invalidFields(validator.validate(create))).containsExactly("appliedDate");
+
+        UpdateJobApplicationRequest update = new UpdateJobApplicationRequest();
+        update.setCompanyName("Acme");
+        update.setJobTitle("Backend Engineer");
+        update.setAppliedDate(LocalDate.now().plusDays(3));
+        assertThat(invalidFields(validator.validate(update))).containsExactly("appliedDate");
     }
 }

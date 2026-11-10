@@ -3,6 +3,7 @@ package com.jobtrack.dto.request;
 import com.jobtrack.entity.enums.ApplicationStatus;
 import com.jobtrack.entity.enums.EmploymentType;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
@@ -43,6 +44,7 @@ public class UpdateJobApplicationRequest {
 
     private ApplicationStatus status;
 
+    @PastOrPresent(message = "Applied date cannot be in the future")
     private LocalDate appliedDate;
 
     private LocalDate deadline;
