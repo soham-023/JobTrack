@@ -5,13 +5,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashMap;
 
@@ -120,6 +123,26 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleMessageNotReadable(HttpMessageNotReadableException ex, HttpServletRequest request) {
+        return buildResponse(HttpStatus.BAD_REQUEST,
+                "Malformed request body: check JSON syntax, field types and enum values", request);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+        String expected = ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "a different type";
+        String message = String.format("Parameter '%s' has invalid value '%s' (expected %s)",
+                ex.getName(), ex.getValue(), expected);
+        return buildResponse(HttpStatus.BAD_REQUEST, message, request);
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMissingParameter(MissingServletRequestParameterException ex, HttpServletRequest request) {
+        return buildResponse(HttpStatus.BAD_REQUEST,
+                "Required parameter '" + ex.getParameterName() + "' is missing", request);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, HttpServletRequest request) {
         // Log the full exception server-side, but never echo internal details
@@ -132,5 +155,15 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    private ResponseEntity<ErrorResponse> buildResponse(HttpStatus status, String message, HttpServletRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                status.value(),
+                status.getReasonPhrase(),
+                message,
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, status);
     }
 }
