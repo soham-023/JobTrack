@@ -292,6 +292,7 @@ class JobTrackIntegrationTest {
                 .andReturn();
 
         assertThat(downloadResult.getResponse().getContentAsByteArray()).isEqualTo(pdfContent);
+        
 
         // 4. Delete Document
         mockMvc.perform(delete("/api/v1/documents/" + docId)
@@ -308,10 +309,13 @@ class JobTrackIntegrationTest {
     @Test
     @DisplayName("Should detect upcoming interviews within 24h window and create reminders without duplicates")
     void testScheduledInterviewReminders() throws Exception {
+        
         RegisterRequest registerReq = new RegisterRequest("remind.user@example.com", "password123", "Reminder Tester");
+        
         MvcResult regResult = mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerReq)))
+            
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -325,6 +329,7 @@ class JobTrackIntegrationTest {
                         .header("Authorization", token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(appReq)))
+            
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -340,6 +345,7 @@ class JobTrackIntegrationTest {
         mockMvc.perform(post("/api/v1/applications/" + appId + "/interviews")
                         .header("Authorization", token)
                         .contentType(MediaType.APPLICATION_JSON)
+                        
                         .content(objectMapper.writeValueAsString(nearInterview)))
                 .andExpect(status().isCreated());
 
