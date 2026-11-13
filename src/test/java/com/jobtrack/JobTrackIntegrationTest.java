@@ -130,6 +130,7 @@ class JobTrackIntegrationTest {
         CreateJobApplicationRequest appReq = new CreateJobApplicationRequest();
         appReq.setCompanyName("Acme Corp");
         appReq.setJobTitle("Backend Software Engineer");
+        
         appReq.setLocation("New York, NY");
         appReq.setEmploymentType(EmploymentType.FULL_TIME);
         
@@ -137,6 +138,7 @@ class JobTrackIntegrationTest {
         appReq.setMaxSalary(BigDecimal.valueOf(160000));
         
         appReq.setStatus(ApplicationStatus.APPLIED);
+        
         appReq.setAppliedDate(LocalDate.now());
         appReq.setInitialNotes("Found via company careers page.");
 
@@ -149,6 +151,7 @@ class JobTrackIntegrationTest {
             
                 .andExpect(jsonPath("$.jobTitle").value("Backend Software Engineer"))
                 .andExpect(jsonPath("$.status").value("APPLIED"))
+            
                 .andExpect(jsonPath("$.notes.length()").value(1))
                 .andReturn();
 
@@ -165,6 +168,7 @@ class JobTrackIntegrationTest {
             
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SCREENING"))
+            
                 .andExpect(jsonPath("$.notes.length()").value(2));
 
         // 4. Add Interview
