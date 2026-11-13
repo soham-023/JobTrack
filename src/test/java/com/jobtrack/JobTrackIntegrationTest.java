@@ -17,6 +17,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -26,6 +27,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import java.time.LocalDateTime;
+
 
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,6 +48,7 @@ class JobTrackIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
     
+    
     @Autowired
     private ObjectMapper objectMapper;
     
@@ -63,6 +66,7 @@ class JobTrackIntegrationTest {
     @DisplayName("Should successfully register a new user and login")
     void testRegisterAndLogin() throws Exception {
         RegisterRequest registerRequest = new RegisterRequest(
+            
                 "john.doe@example.com",
             
                 "secretPassword123",
@@ -72,6 +76,7 @@ class JobTrackIntegrationTest {
         MvcResult registerResult = mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerRequest)))
+            
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.token").isString())
                 .andExpect(jsonPath("$.user.email").value("john.doe@example.com"))
