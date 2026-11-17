@@ -1,5 +1,4 @@
 package com.jobtrack.dto.request;
-
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -16,6 +15,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class JobApplicationRequestValidationTest {
+    
 
     private static ValidatorFactory factory;
     private static Validator validator;
@@ -32,6 +32,7 @@ class JobApplicationRequestValidationTest {
     }
 
     private static CreateJobApplicationRequest validCreateRequest() {
+        
         CreateJobApplicationRequest request = new CreateJobApplicationRequest();
         request.setCompanyName("Acme");
         request.setJobTitle("Backend Engineer");
@@ -56,6 +57,7 @@ class JobApplicationRequestValidationTest {
     @ParameterizedTest
     @ValueSource(strings = {"example.com", "ftp://example.com/file", "javascript:alert(1)", "https://exa mple.com"})
     void rejectsNonHttpJobUrl(String url) {
+        
         CreateJobApplicationRequest request = validCreateRequest();
         request.setJobUrl(url);
 
@@ -66,6 +68,7 @@ class JobApplicationRequestValidationTest {
     void updateRequestAppliesSameJobUrlRule() {
         UpdateJobApplicationRequest request = new UpdateJobApplicationRequest();
         request.setCompanyName("Acme");
+        
         request.setJobTitle("Backend Engineer");
         request.setJobUrl("javascript:alert(1)");
 
@@ -76,6 +79,7 @@ class JobApplicationRequestValidationTest {
     void appliedDateTodayOrEarlierIsValid() {
         CreateJobApplicationRequest request = validCreateRequest();
         request.setAppliedDate(LocalDate.now());
+        
         assertThat(validator.validate(request)).isEmpty();
 
         request.setAppliedDate(LocalDate.now().minusMonths(2));
@@ -86,6 +90,7 @@ class JobApplicationRequestValidationTest {
     void appliedDateInFutureIsRejected() {
         CreateJobApplicationRequest create = validCreateRequest();
         create.setAppliedDate(LocalDate.now().plusDays(3));
+        
         assertThat(invalidFields(validator.validate(create))).containsExactly("appliedDate");
 
         UpdateJobApplicationRequest update = new UpdateJobApplicationRequest();
